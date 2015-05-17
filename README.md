@@ -1,6 +1,6 @@
 akka-http-test
 ==============
-Akka http test
+A study project how akka-http works.
 
 # Web Server
 A new HTTP server can be launched using the `Http()` class. The `bindAndHandle()` method is a convenience method which starts 
