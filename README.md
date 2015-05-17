@@ -9,6 +9,16 @@ a new HTTP server at the given endpoint and uses the given 'handler' `Flow` for 
 Note that there is no backpressure being applied to the 'connections' `Source`, i.e. all connections are being accepted 
 at maximum rate, which, depending on the applications, might present a DoS risk!
 
+```scala
+import akka.http.scaladsl._
+import akka.http.scaladsl.model._
+import akka.stream.scaladsl._
+
+def routes: Flow[HttpRequest, HttpResponse, Unit]
+
+Http().bindAndHandle(routes, "0.0.0.0", 8080)
+```
+
 # Routes
 First some Akka Stream parley:
 
@@ -23,6 +33,25 @@ First some Akka Stream parley:
 
 In akka-http parley, a 'Route' is a `Flow[HttpRequest, HttpResponse, Unit]` so it is a processing stage that transforms 
 `HttpRequest` elements to `HttpResponse` elements. 
+
+# Route Directives
+Akka http uses the route directives we know (and love) from Spray:
+
+```scala
+import akka.http.scaladsl._
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.Directives._
+import akka.stream.scaladsl._
+
+def routes: Flow[HttpRequest, HttpResponse, Unit] =
+  logRequestResult("akka-http-test") {
+    pathPrefix("person") {
+      complete {
+        Person("John", "Doe", TimeUtil.timestamp)
+      }
+    }
+  }
+```
 
 # Spray-Json
 I'm glad to see that `akka-http-spray-json-experimental` basically has the same API as spray:
