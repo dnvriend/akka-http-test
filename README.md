@@ -2,6 +2,24 @@ akka-http-test
 ==============
 A study project how akka-http works.
 
+# Dependencies
+To use akka-http we need the following dependencies:
+
+```scala
+libraryDependencies ++= {
+  val akkaVersion       = "2.3.11"
+  val akkaStreamVersion = "1.0-RC2"
+  Seq(
+    "com.typesafe.akka" %% "akka-actor"                           % akkaVersion,
+    "com.typesafe.akka" %% "akka-stream-experimental"             % akkaStreamVersion,
+    "com.typesafe.akka" %% "akka-http-core-experimental"          % akkaStreamVersion,
+    "com.typesafe.akka" %% "akka-http-scala-experimental"         % akkaStreamVersion,
+    "com.typesafe.akka" %% "akka-http-spray-json-experimental"    % akkaStreamVersion,
+    "com.typesafe.akka" %% "akka-http-testkit-scala-experimental" % akkaStreamVersion
+  )
+}
+```
+
 # Web Server
 A new HTTP server can be launched using the `Http()` class. The `bindAndHandle()` method is a convenience method which starts 
 a new HTTP server at the given endpoint and uses the given 'handler' `Flow` for processing  all incoming connections. 
