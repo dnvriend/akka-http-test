@@ -6,23 +6,24 @@ import spray.json._
 
 class MarshalUnmarshalTest extends TestSpec {
 
-  case class Person(firstName: String, lastName: String, age: Int, married: Option[Boolean] = None)
+  object TestMarshallers extends Marshallers with DefaultJsonProtocol with SprayJsonSupport
 
-  object Marshallers extends DefaultJsonProtocol with SprayJsonSupport {
-    implicit val personJsonFormat = jsonFormat4(Person)
-  }
+  import TestMarshallers._
 
-  val personJson = """{"firstName":"John","lastName":"Doe","age":35}"""
+  val weatherJson = """{
+       "coord":{"lon":5.21,"lat":52.37},
+       "sys":{"message":0.2418,"country":"NL","sunrise":1431833997,"sunset":1431891067},
+       "weather":[{"id":802,"main":"Clouds","description":"scattered clouds","icon":"03d"}],
+       "base":"stations",
+       "main":{"temp":287.345,"temp_min":287.345,"temp_max":287.345,"pressure":1036.1,"sea_level":1037,"grnd_level":1036.1,"humidity":72},"wind":{"speed":6.17,"deg":276.5},
+       "clouds":{"all":32},
+       "dt":1431869166,
+       "id":0,
+       "name":"Kruidenwijk, Staatsliedenwijk",
+       "cod":200
+       }"""
 
-  val personJsonMarried = """{"firstName":"John","lastName":"Doe","age":35,"married":true}"""
-
-  import Marshallers._
-
-  "Person" should "be marshalled" in {
-    Person("John", "Doe", 35).toJson.compactPrint shouldBe personJson
-  }
-
-  it should "be unmarshalled" in {
-    personJsonMarried.parseJson.convertTo[Person] shouldBe Person("John", "Doe", 35, Option(true))
+  "WeatherResult" should "be unmarshalled" in {
+    weatherJson.parseJson.convertTo[WeatherResult]
   }
 }

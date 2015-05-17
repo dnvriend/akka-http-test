@@ -5,5 +5,12 @@ import spray.json.DefaultJsonProtocol
 
 trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val personJsonFormat = jsonFormat3(Person)
-  implicit val timeJsonFormat = jsonFormat3(Time)
+
+  implicit val windJsonFormat = jsonFormat2(Wind)
+  implicit val mainJsonFormat = jsonFormat7(Main)
+  implicit val cloudJsonFormat = jsonFormat1(Cloud)
+  implicit val weatherJsonFormat = jsonFormat4(Weather)
+  implicit val sysJsonFormat = jsonFormat4(Sys)
+  implicit val coordJsonFormat = jsonFormat2(Coord)
+  implicit val weatherResultJsonFormat = jsonFormat11(WeatherResult)
 }
