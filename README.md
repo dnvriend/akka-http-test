@@ -69,7 +69,11 @@ First some Akka Stream parley:
 * `Sink`: a processing stage with exactly one input, requesting and accepting data elements
 * `Flow`: a processing stage with exactly one input and output, which connects its up- and downstream by moving/transforming the data elements flowing through it,
 * `Runnable flow`: A flow that has both ends attached to a `Source` and `Sink` respectively,
-* `Materialized flow`: A
+* `Materialized flow`: An instantiation / incarnation / materialization of the abstract processing-flow template. 
+
+The abstractions above (Flow, Source, Sink, Processing stage) are used to create a processing-stream `template` or `blueprint`. When the template has a `Source` connected to a `Sink` with optionally some `processing stages` between them, such a `template` is called a `Runnable Flow`. 
+
+The materializer for `akka-stream` is the [ActorFlowMaterializer](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC2/index.html#akka.stream.ActorFlowMaterializer) which takes the list of transformations comprising a [akka.stream.scaladsl.Flow](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC2/index.html#akka.stream.scaladsl.Flow) and materializes them in the form of [org.reactivestreams.Processor](https://github.com/reactive-streams/reactive-streams-jvm/blob/master/api/src/main/java/org/reactivestreams/Processor.java) instances, in which every stage is converted into one actor.
 
 In akka-http parley, a 'Route' is a `Flow[HttpRequest, HttpResponse, Unit]` so it is a processing stage that transforms 
 `HttpRequest` elements to `HttpResponse` elements. 
