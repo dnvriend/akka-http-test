@@ -95,3 +95,6 @@ Person("John", "Doe", 35).toJson.compactPrint shouldBe personJson
 
 personJsonMarried.parseJson.convertTo[Person] shouldBe Person("John", "Doe", 35, Option(true))
 ```
+
+# Projects that use akka-http
+- [GitHub - Example of (micro)service written in Scala & akka-http](https://github.com/theiterators/akka-http-microservice)
