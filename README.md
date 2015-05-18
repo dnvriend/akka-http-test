@@ -131,7 +131,11 @@ personJsonMarried.parseJson.convertTo[Person] shouldBe Person("John", "Doe", 35,
 ```
 
 # Video
-- [YouTube - Akka HTTP — The What, Why and How](https://www.youtube.com/watch?v=y_slPbktLr0) - [Slides](http://spray.io/nescala2015/#/)
+- [YouTube - Akka HTTP — The What, Why and How](https://www.youtube.com/watch?v=y_slPbktLr0) - 
+
+# Slides
+- [Slides - Akka HTTP — The What, Why and How](http://spray.io/nescala2015/#/)
+- [Slides - Reactive Streams & Akka HTTP](http://spray.io/msug/#/)
 
 # Northeast Scala Symposium 2015
 - [Northeast Scala Symposium 2015](https://newcircle.com/s/post/1702/northeast_scala_symposium_2015_videos?utm_campaign=YouTube_Channel&utm_source=youtube&utm_medium=social&utm_content=Watch%20the%2013%20talks%20from%20NE%20Scala%202015%3A)
