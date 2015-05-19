@@ -98,9 +98,17 @@ import akka.stream.scaladsl._
 
 def routes: Flow[HttpRequest, HttpResponse, Unit] =
   logRequestResult("akka-http-test") {
+    path("") {
+      redirect("person", StatusCodes.PermanentRedirect)
+    } ~
     pathPrefix("person") {
       complete {
-        Person("John", "Doe", TimeUtil.timestamp)
+        Person("John Doe", 25)
+      }
+    } ~
+    pathPrefix("ping") {
+      complete {
+        Ping(TimeUtil.timestamp)
       }
     }
   }
