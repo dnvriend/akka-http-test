@@ -1,22 +1,17 @@
 package com.github.dnvriend
 
-import java.io.IOException
-
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
-import akka.http.javadsl.model.ResponseEntity
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
-import akka.http.scaladsl.model.HttpHeader.ParsingResult
 import akka.http.scaladsl.model.StatusCodes._
-import akka.http.scaladsl.model.{HttpHeader, HttpRequest, HttpResponse}
+import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.FlowMaterializer
 import akka.stream.scaladsl.{Flow, Sink, Source}
-import spray.json._
 
-import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
 trait TimeClient extends Marshallers {
   implicit def system: ActorSystem

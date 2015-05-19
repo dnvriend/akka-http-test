@@ -4,7 +4,8 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.DefaultJsonProtocol
 
 trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport {
-  implicit val personJsonFormat = jsonFormat3(Person)
+  implicit val personJsonFormat = jsonFormat2(Person)
+  implicit val pingJsonFormat = jsonFormat1(Ping)
 
   implicit val windJsonFormat = jsonFormat2(Wind)
   implicit val mainJsonFormat = jsonFormat7(Main)

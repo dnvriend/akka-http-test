@@ -1,6 +1,7 @@
 # akka-http-test
-
-A study project how akka-http works.
+A study project how akka-http works. The code below is a bit compacted, so please use it for reference only how
+the (new) API must be used. It will not compile/work correctly when you just copy/paste it. Check out the working 
+source code for correct usage.
 
 # Dependencies
 To use akka-http we need the following dependencies:
@@ -109,25 +110,91 @@ def routes: Flow[HttpRequest, HttpResponse, Unit] =
 I'm glad to see that `akka-http-spray-json-experimental` basically has the same API as spray:
 
 ```scala
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json.DefaultJsonProtocol
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import akka.http.scaladsl.marshalling.Marshal
+import akka.http.scaladsl.model.RequestEntity
+import akka.http.scaladsl.unmarshalling.Unmarshal
+import spray.json.DefaultJsonProtocol._
 import spray.json._
 
-case class Person(firstName: String, lastName: String, age: Int, married: Option[Boolean] = None)
+case class Person(name: String, age: Int)
 
-object Marshallers extends DefaultJsonProtocol with SprayJsonSupport {
-  implicit val personJsonFormat = jsonFormat4(Person)
+val personJson = """{"name":"John Doe","age":25}"""
+
+implicit val personJsonFormat = jsonFormat2(Person)
+
+Person("John Doe", 25).toJson.compactPrint shouldBe personJson
+
+personJson.parseJson.convertTo[Person] shouldBe Person("John Doe", 25)
+
+val person = Person("John Doe", 25)
+val entity = Marshal(person).to[RequestEntity].futureValue
+Unmarshal(entity).to[Person].futureValue shouldBe person
+```
+
+# Custom Marshalling/Unmarshalling
+Akka http has a cleaner API for custom types compared to Spray's. Out of the box it has support to marshal to/from basic types (Byte/String/NodeSeq) and 
+so we can marshal/unmarshal from/to case classes from any line format. The API uses the [Marshal](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC2/?_ga=1.16206710.1504154521.1386618491#akka.http.scaladsl.marshalling.Marshal) 
+object to do the marshalling and the [Unmarshal](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC2/?_ga=1.16206710.1504154521.1386618491#akka.http.scaladsl.unmarshalling.Unmarshal)
+object to to the unmarshal process. Both interfaces return Futures that contain the outcome. 
+
+The `Unmarshal` class uses an [Unmarshaller](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC2/?_ga=1.16206710.1504154521.1386618491#akka.http.scaladsl.unmarshalling.Unmarshaller) 
+that defines how an encoding like eg `XML` can be converted from eg. a `NodeSeq` to a custom type, like eg. a `Person`. 
+
+To `Marshal` class uses [Marshaller](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC2/?_ga=1.16206710.1504154521.1386618491#akka.http.scaladsl.marshalling.Marshaller)s
+to do the heavy lifting. There are three kinds of marshallers, they all do the same, but one is not interested in the [MediaType](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC2/?_ga=1.16206710.1504154521.1386618491#akka.http.scaladsl.model.MediaTypes$) 
+, the `opaque` marshaller, then there is the `withOpenCharset` marshaller, that is only interested in the mediatype, and forwards the received [HttpCharset](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC2/?_ga=1.16206710.1504154521.1386618491#akka.http.scaladsl.model.HttpCharsets$) 
+to the `marshal function` so that the responsibility for handling the character encoding is up to the developer, 
+and the last one, the `withFixedCharset` will handle only HttpCharsets that match the marshaller configured one. 
+ 
+An example XML marshaller/unmarshaller:
+
+```scala
+import akka.http.scaladsl.marshalling.{Marshal, Marshaller, Marshalling}
+import akka.http.scaladsl.model.HttpCharset
+import akka.http.scaladsl.model.HttpCharsets._
+import akka.http.scaladsl.model.MediaTypes._
+import akka.http.scaladsl.unmarshalling.{Unmarshal, Unmarshaller}
+
+import scala.concurrent.Future
+import scala.xml.NodeSeq
+
+case class Person(name: String, age: Int)
+
+val personXml =
+  <person>
+    <name>John Doe</name>
+    <age>25</age>
+  </person>
+
+implicit val personUnmarshaller = Unmarshaller[NodeSeq, Person] { xml =>
+  Future(Person((xml \\ "name").text, (xml \\ "age").text.toInt))
 }
 
-val personJson = """{"firstName":"John","lastName":"Doe","age":35}"""
+// you don't need that many marshaller(s)/unmarshaller(s), all variants and constructions are shown here
+val opaquePersonMarshalling = Marshalling.Opaque(() => personXml)
+val openCharsetPersonMarshalling = Marshalling.WithOpenCharset(`text/xml`, (charset: HttpCharset) => personXml)
+val fixedCharsetPersonMarshalling = Marshalling.WithFixedCharset(`text/xml`, `UTF-8`, () => personXml)
 
-val personJsonMarried = """{"firstName":"John","lastName":"Doe","age":35,"married":true}"""
+val opaquePersonMarshaller = Marshaller.opaque[Person, NodeSeq] { person => personXml }
+val withFixedCharsetPersonMarshaller = Marshaller.withFixedCharset[Person, NodeSeq](`text/xml`, `UTF-8`) { person => personXml }
+val withOpenCharsetCharsetPersonMarshaller = Marshaller.withOpenCharset[Person, NodeSeq](`text/xml`) { (person, charset) => personXml }
 
-import Marshallers._
+implicit val personMarshaller = Marshaller.strict[Person, NodeSeq] { person =>
+   Marshalling.Opaque(() => personXml),
+}
 
-Person("John", "Doe", 35).toJson.compactPrint shouldBe personJson
+implicit val personMarshaller = Marshaller.opaque[Person, NodeSeq] { person => personXml }
 
-personJsonMarried.parseJson.convertTo[Person] shouldBe Person("John", "Doe", 35, Option(true))
+implicit val personMarshaller = Marshaller[Person, NodeSeq] { person =>
+  Future(List(opaquePersonMarshalling, openCharsetPersonMarshalling, fixedCharsetPersonMarshalling))
+}
+
+implicit val personMarshaller = Marshaller.oneOf[Person, NodeSeq](opaquePersonMarshaller, withFixedCharsetPersonMarshaller, withOpenCharsetCharsetPersonMarshaller)
+
+Unmarshal(personXml).to[Person].futureValue shouldBe Person("John Doe", 25)
+
+Marshal(Person("John Doe", 25)).to[NodeSeq].futureValue shouldBe personXml
 ```
 
 # Video

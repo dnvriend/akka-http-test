@@ -14,7 +14,16 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-http-core-experimental"          % akkaStreamVersion,
     "com.typesafe.akka" %% "akka-http-scala-experimental"         % akkaStreamVersion,
     "com.typesafe.akka" %% "akka-http-spray-json-experimental"    % akkaStreamVersion,
+    "com.typesafe.akka" %% "akka-http-xml-experimental"           % akkaStreamVersion,
     "com.typesafe.akka" %% "akka-http-testkit-scala-experimental" % akkaStreamVersion,
     "org.scalatest"     %% "scalatest"                            % scalaTestVersion    % Test
   )
 }
+
+import spray.revolver.RevolverPlugin.Revolver
+
+Revolver.settings
+
+Revolver.enableDebugging(port = 5050, suspend = false)
+
+mainClass in Revolver.reStart := Some("com.github.dnvriend.SimpleServer")
