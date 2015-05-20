@@ -3,12 +3,15 @@ package com.github.dnvriend
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl._
+import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.`Content-Type`
 import akka.http.scaladsl.server.Directives._
 import akka.stream.FlowMaterializer
 import akka.stream.scaladsl._
 
 import scala.concurrent.ExecutionContextExecutor
+import scala.xml.NodeSeq
 
 case class Person(name: String, age: Int)
 case class WeatherResult(coord: Coord, sys: Sys, weather: List[Weather], base: String, main: Main, wind: Wind, clouds: Cloud, dt: Long, id: Int, name: String, cod: Int)
@@ -29,11 +32,18 @@ trait Service extends Marshallers {
   def routes: Flow[HttpRequest, HttpResponse, Unit] =
     logRequestResult("akka-http-test") {
       path("") {
-        redirect("person", StatusCodes.PermanentRedirect)
+        redirect("person/json", StatusCodes.PermanentRedirect)
       } ~
       pathPrefix("person") {
-        complete {
-          Person("John Doe", 25)
+        pathPrefix("json") {
+          complete {
+            Person("John Doe", 25)
+          }
+        } ~
+        pathPrefix("xml") {
+          complete {
+            Marshal(Person("John Doe", 25)).to[NodeSeq]
+          }
         }
       } ~
       pathPrefix("ping") {

@@ -140,31 +140,6 @@ val entity = Marshal(person).to[RequestEntity].futureValue
 Unmarshal(entity).to[Person].futureValue shouldBe person
 ```
 
-# Unmashaller types
-The following types are defined:
-
-```scala
-package akka.http.scaladsl
-type FromEntityUnmarshaller[T] = Unmarshaller[HttpEntity, T]
-type FromMessageUnmarshaller[T] = Unmarshaller[HttpMessage, T]
-type FromResponseUnmarshaller[T] = Unmarshaller[HttpResponse, T]
-type FromRequestUnmarshaller[T] = Unmarshaller[HttpRequest, T]
-type FromStringUnmarshaller[T] = Unmarshaller[String, T]
-type FromStrictFormFieldUnmarshaller[T] = Unmarshaller[StrictForm.Field, T]
-```
-
-# Unmarshalling
-## packages
-* library: akka-http-scala-experimental
-  * package: akka.http.scaladsl.unmarshalling
-  * object: Unmarshal: Unmarshals the value to the given Type using the in-scope Unmarshaller.
-  * object Unmarshaller; it contains all marshallers from the `akka.http.scaladsl.unmarshalling` package
-* library: akka-http-xml-experimental
-  * package: akka.http.scaladsl.marshallers.xml
-  * class: ScalaXmlSupport
-    * implicit ToEntityMarshaller[NodeSeq]
-    * implicit FromEntityUnmarshaller[NodeSeq]
-
 # Custom Marshalling/Unmarshalling
 Akka http has a cleaner API for custom types compared to Spray's. Out of the box it has support to marshal to/from basic types (Byte/String/NodeSeq) and 
 so we can marshal/unmarshal from/to case classes from any line format. The API uses the [Marshal](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC2/?_ga=1.16206710.1504154521.1386618491#akka.http.scaladsl.marshalling.Marshal) 
