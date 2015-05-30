@@ -13,7 +13,7 @@ import akka.stream.scaladsl.{Flow, Sink, Source}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
-trait TimeClient extends Marshallers {
+trait OpenWeatherApi extends Marshallers {
   implicit def system: ActorSystem
   implicit def ec: ExecutionContextExecutor
   implicit def materializer: FlowMaterializer
@@ -36,9 +36,26 @@ trait TimeClient extends Marshallers {
       }
     }
   }
+
+  def getAkkaIo: Future[String] = {
+    val connectionFlow: Flow[HttpRequest, HttpResponse, Future[Http.OutgoingConnection]] = 
+      Http().outgoingConnection("akka.io")
+
+    val akkaIORequest: Future[HttpResponse] =
+      Source.single(HttpRequest(uri = "/docs"))
+        .via(connectionFlow)
+        .runWith(Sink.head)      
+
+     akkaIORequest.flatMap { response => 
+      response.status match {
+        case _ => Unmarshal(response.entity).to[String]
+      }
+     } 
+  }
 }
 
-object SimpleClient extends App with TimeClient with CoreServices {
+object WeatherClient extends App with OpenWeatherApi with CoreServices {
   println(Await.result(getDate, 10.seconds))
+  println(Await.result(getAkkaIo, 10.seconds))
   system.shutdown()
 }
