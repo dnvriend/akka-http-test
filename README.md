@@ -31,7 +31,7 @@ Dependencies in `build.sbt`:
 ```scala
 libraryDependencies ++= {
   val akkaVersion       = "2.3.11"
-  val akkaStreamVersion = "1.0-RC2"
+  val akkaStreamVersion = "1.0-RC3"
   Seq(
     "com.typesafe.akka" %% "akka-actor"                           % akkaVersion,
     "com.typesafe.akka" %% "akka-stream-experimental"             % akkaStreamVersion,
@@ -206,7 +206,14 @@ Marshal(Person("John Doe", 25)).to[NodeSeq].futureValue shouldBe personXml
 ```
 
 # Video
-- [YouTube - Akka HTTP — The What, Why and How](https://www.youtube.com/watch?v=y_slPbktLr0) - 
+- [Parleys - Dr. Roland Kuhn - Akka HTTP - The Reactive Web Toolkit](https://www.parleys.com/tutorial/akka-http-reactive-web-toolkit)
+- [Parleys - Mathias Doenitz - Akka HTTP - Unrest your actors](https://www.parleys.com/tutorial/akka-http-un-rest-your-actors)
+- [Youtube - Mathias Doenitz - Akka HTTP — The What, Why and How](https://www.youtube.com/watch?v=y_slPbktLr0)
+- [Youtube -  Mathias Doenitz - Spray & Akka HTTP](https://www.youtube.com/watch?v=o5PUDI4qi10)
+- [Youtube -  Mathias Doenitz - Spray on Akka](https://www.youtube.com/watch?v=7MqD7_YvZ8Q)
+- [Parleys - Dr. Roland Kuhn - Go Reactive: Blueprint for Future Applications ](https://www.parleys.com/tutorial/go-reactive-blueprint-future-applications)
+- [Parleys - Dr. Roland Kuhn - Distributed in space and time](https://www.parleys.com/tutorial/roland-kuhn-distributed-space-time-1)
+- [Parleys - Mirco Dotta - Akka Streams](https://www.parleys.com/tutorial/akka-streams)
 
 # Slides
 - [Slides - Akka HTTP — The What, Why and How](http://spray.io/nescala2015/#/)
