@@ -16,10 +16,11 @@
 
 package com.github.dnvriend
 
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{ MediaTypes, StatusCodes }
 import akka.http.scaladsl.model.StatusCodes._
-import akka.http.scaladsl.model.headers.RawHeader
+import akka.http.scaladsl.model.headers.{ Accept, RawHeader }
 import akka.http.scaladsl.testkit.ScalatestRouteTest
+import MediaTypes._
 
 /**
  * see: https://github.com/akka/akka/blob/releasing-akka-stream-and-http-experimental-1.0-RC4/akka-http-testkit/src/test/scala/akka/http/scaladsl/testkit/ScalatestRouteTestSpec.scala
@@ -27,11 +28,11 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
  */
 class MarshallersTest extends TestSpecWithoutSystem with Service with ScalatestRouteTest {
 
-  val jsonHeader = RawHeader("Accept", "application/json")
-  val xmlHeader = RawHeader("Accept", "application/xml")
+  val jsonHeader = Accept(`application/json`)
+  val xmlHeader = Accept(`application/xml`)
 
-  val xmlHeaderV1 = RawHeader("Accept", "application/vnd.acme.v1+xml")
-  val xmlHeaderV2 = RawHeader("Accept", "application/vnd.acme.v2+xml")
+  val xmlHeaderV1 = Accept(MediaVersionTypes.`application/vnd.acme.v1+xml`)
+  val xmlHeaderV2 = Accept(MediaVersionTypes.`application/vnd.acme.v2+xml`)
 
   "Get to ping" should "should include timestamp field" in {
     Get("/ping") ~> routes ~> check {
@@ -46,21 +47,21 @@ class MarshallersTest extends TestSpecWithoutSystem with Service with ScalatestR
     }
   }
 
-  //  it should "return person as XML v2 with application/xml" in {
-  //    Get("/person") ~> addHeader(xmlHeader) ~> routes ~> check {
-  //      responseAs[String] should include("timestamp")
-  //    }
-  //  }
-  //
-  //  it should "return person as XML v1 with vendor media type" in {
-  //    Get("/person") ~> addHeader(xmlHeaderV1) ~> routes ~> check {
-  //      responseAs[String] should include("timestamp")
-  //    }
-  //  }
-  //
-  //  it should "return person as XML v2 with vendor media type" in {
-  //    Get("/person") ~> addHeader(xmlHeaderV2) ~> routes ~> check {
-  //      responseAs[String] should include("timestamp")
-  //    }
-  //  }
+  it should "return person as XML" in {
+    Get("/person") ~> addHeader(xmlHeader) ~> routes ~> check {
+      responseAs[String] should include("<married>")
+    }
+  }
+
+  it should "return person as XML v1 with vendor media type" in {
+    Get("/person") ~> addHeader(xmlHeaderV1) ~> routes ~> check {
+      responseAs[String] should not include "<married>"
+    }
+  }
+
+  it should "return person as XML v2 with vendor media type" in {
+    Get("/person") ~> addHeader(xmlHeaderV2) ~> routes ~> check {
+      responseAs[String] should include("<married>")
+    }
+  }
 }
