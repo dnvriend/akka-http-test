@@ -16,11 +16,11 @@
 
 package com.github.dnvriend
 
-import akka.http.scaladsl.model.{ MediaTypes, StatusCodes }
+import akka.http.scaladsl.model.MediaTypes
+import akka.http.scaladsl.model.MediaTypes._
 import akka.http.scaladsl.model.StatusCodes._
-import akka.http.scaladsl.model.headers.{ Accept, RawHeader }
+import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import MediaTypes._
 
 /**
  * see: https://github.com/akka/akka/blob/releasing-akka-stream-and-http-experimental-1.0-RC4/akka-http-testkit/src/test/scala/akka/http/scaladsl/testkit/ScalatestRouteTestSpec.scala
