@@ -46,16 +46,6 @@ class XmlMarshalUnmarshalTest extends TestSpec {
   val withFixedCharsetPersonMarshaller = Marshaller.withFixedCharset[Person, NodeSeq](`text/xml`, `UTF-8`) { person ⇒ personXml }
   val withOpenCharsetCharsetPersonMarshaller = Marshaller.withOpenCharset[Person, NodeSeq](`text/xml`) { (person, charset) ⇒ personXml }
 
-  //  implicit val personMarshaller = Marshaller.strict[Person, NodeSeq] { person =>
-  //    Marshalling.Opaque(() => personXml),
-  //  }
-
-  //  implicit val personMarshaller = Marshaller.opaque[Person, NodeSeq] { person => personXml }
-
-  //  implicit val personMarshaller = Marshaller[Person, NodeSeq] { person =>
-  //    Future(List(opaquePersonMarshalling, openCharsetPersonMarshalling, fixedCharsetPersonMarshalling))
-  //  }
-
   implicit val personMarshaller = Marshaller.oneOf[Person, NodeSeq](opaquePersonMarshaller, withFixedCharsetPersonMarshaller, withOpenCharsetCharsetPersonMarshaller)
 
   "personXml" should "be unmarshalled" in {

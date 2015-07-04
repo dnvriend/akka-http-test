@@ -17,35 +17,23 @@
 package com.github.dnvriend
 
 import akka.http.scaladsl._
-import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.stream.scaladsl._
+import com.github.dnvriend.domain.Person
 import com.github.dnvriend.util.TimeUtil
-
-import scala.xml.NodeSeq
-
-case class Person(name: String, age: Int)
-case class Ping(timestamp: String)
 
 trait Service extends Marshallers with CoreServices {
 
   def routes: Flow[HttpRequest, HttpResponse, Unit] =
     logRequestResult("akka-http-test") {
       path("") {
-        redirect("person/json", StatusCodes.PermanentRedirect)
+        redirect("person", StatusCodes.PermanentRedirect)
       } ~
         pathPrefix("person") {
-          pathPrefix("json") {
-            complete {
-              Person("John Doe", 25)
-            }
-          } ~
-            pathPrefix("xml") {
-              complete {
-                Marshal(Person("John Doe", 25)).to[NodeSeq]
-              }
-            }
+          complete {
+            Person("John Doe", 25)
+          }
         } ~
         pathPrefix("ping") {
           complete {

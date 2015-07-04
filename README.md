@@ -31,14 +31,15 @@ Dependencies in `build.sbt`:
 ```scala
 libraryDependencies ++= {
   val akkaVersion       = "2.3.11"
-  val akkaStreamVersion = "1.0-RC3"
+  val akkaStreamVersion = "1.0-RC4"
   Seq(
-    "com.typesafe.akka" %% "akka-actor"                           % akkaVersion,
-    "com.typesafe.akka" %% "akka-stream-experimental"             % akkaStreamVersion,
-    "com.typesafe.akka" %% "akka-http-core-experimental"          % akkaStreamVersion,
-    "com.typesafe.akka" %% "akka-http-scala-experimental"         % akkaStreamVersion,
-    "com.typesafe.akka" %% "akka-http-spray-json-experimental"    % akkaStreamVersion,
-    "com.typesafe.akka" %% "akka-http-testkit-scala-experimental" % akkaStreamVersion
+    "com.typesafe.akka"      %% "akka-actor"                           % akkaVersion,
+    "com.typesafe.akka"      %% "akka-stream-experimental"             % akkaStreamVersion,
+    "com.typesafe.akka"      %% "akka-http-core-experimental"          % akkaStreamVersion,
+    "com.typesafe.akka"      %% "akka-http-experimental"               % akkaStreamVersion,
+    "com.typesafe.akka"      %% "akka-http-spray-json-experimental"    % akkaStreamVersion,
+    "com.typesafe.akka"      %% "akka-http-xml-experimental"           % akkaStreamVersion,
+    "com.typesafe.akka"      %% "akka-http-testkit-experimental"       % akkaStreamVersion,
   )
 }
 ```
@@ -74,7 +75,10 @@ First some Akka Stream parley:
 
 The abstractions above (Flow, Source, Sink, Processing stage) are used to create a processing-stream `template` or `blueprint`. When the template has a `Source` connected to a `Sink` with optionally some `processing stages` between them, such a `template` is called a `Runnable Flow`. 
 
-The materializer for `akka-stream` is the [ActorFlowMaterializer](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC2/index.html#akka.stream.ActorFlowMaterializer) which takes the list of transformations comprising a [akka.stream.scaladsl.Flow](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC2/index.html#akka.stream.scaladsl.Flow) and materializes them in the form of [org.reactivestreams.Processor](https://github.com/reactive-streams/reactive-streams-jvm/blob/master/api/src/main/java/org/reactivestreams/Processor.java) instances, in which every stage is converted into one actor.
+The materializer for `akka-stream` is the [ActorMaterializer](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC4/#akka.stream.ActorMaterializer) 
+which takes the list of transformations comprising a [akka.stream.scaladsl.Flow](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC4/#akka.stream.javadsl.Flow) 
+and materializes them in the form of [org.reactivestreams.Processor](https://github.com/reactive-streams/reactive-streams-jvm/blob/master/api/src/main/java/org/reactivestreams/Processor.java) 
+instances, in which every stage is converted into one actor.
 
 In akka-http parley, a 'Route' is a `Flow[HttpRequest, HttpResponse, Unit]` so it is a processing stage that transforms 
 `HttpRequest` elements to `HttpResponse` elements. 
@@ -142,29 +146,28 @@ Unmarshal(entity).to[Person].futureValue shouldBe person
 
 # Custom Marshalling/Unmarshalling
 Akka http has a cleaner API for custom types compared to Spray's. Out of the box it has support to marshal to/from basic types (Byte/String/NodeSeq) and 
-so we can marshal/unmarshal from/to case classes from any line format. The API uses the [Marshal](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC2/?_ga=1.16206710.1504154521.1386618491#akka.http.scaladsl.marshalling.Marshal) 
-object to do the marshalling and the [Unmarshal](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC2/?_ga=1.16206710.1504154521.1386618491#akka.http.scaladsl.unmarshalling.Unmarshal)
+so we can marshal/unmarshal from/to case classes from any line format. The API uses the [Marshal](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC4/#akka.http.scaladsl.marshalling.Marshal) 
+object to do the marshalling and the [Unmarshal](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC4/#akka.http.scaladsl.unmarshalling.Unmarshal)
 object to to the unmarshal process. Both interfaces return Futures that contain the outcome. 
 
-The `Unmarshal` class uses an [Unmarshaller](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC2/?_ga=1.16206710.1504154521.1386618491#akka.http.scaladsl.unmarshalling.Unmarshaller) 
+The `Unmarshal` class uses an [Unmarshaller](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC4/#akka.http.scaladsl.unmarshalling.Unmarshaller) 
 that defines how an encoding like eg `XML` can be converted from eg. a `NodeSeq` to a custom type, like eg. a `Person`. 
 
-To `Marshal` class uses [Marshaller](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC2/?_ga=1.16206710.1504154521.1386618491#akka.http.scaladsl.marshalling.Marshaller)s
-to do the heavy lifting. There are three kinds of marshallers, they all do the same, but one is not interested in the [MediaType](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC2/?_ga=1.16206710.1504154521.1386618491#akka.http.scaladsl.model.MediaTypes$) 
-, the `opaque` marshaller, then there is the `withOpenCharset` marshaller, that is only interested in the mediatype, and forwards the received [HttpCharset](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC2/?_ga=1.16206710.1504154521.1386618491#akka.http.scaladsl.model.HttpCharsets$) 
+To `Marshal` class uses [Marshaller](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC4/#akka.http.javadsl.server.Marshaller)s
+to do the heavy lifting. There are three kinds of marshallers, they all do the same, but one is not interested in the [MediaType](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC4/#akka.http.javadsl.model.MediaType) 
+, the `opaque` marshaller, then there is the `withOpenCharset` marshaller, that is only interested in the mediatype, and forwards the received [HttpCharset](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC4/#akka.http.scaladsl.model.HttpCharset) 
 to the `marshal function` so that the responsibility for handling the character encoding is up to the developer, 
 and the last one, the `withFixedCharset` will handle only HttpCharsets that match the marshaller configured one. 
  
 An example XML marshaller/unmarshaller:
 
 ```scala
-import akka.http.scaladsl.marshalling.{Marshal, Marshaller, Marshalling}
+import akka.http.scaladsl.marshalling.{ Marshal, Marshaller, Marshalling }
 import akka.http.scaladsl.model.HttpCharset
 import akka.http.scaladsl.model.HttpCharsets._
 import akka.http.scaladsl.model.MediaTypes._
-import akka.http.scaladsl.unmarshalling.{Unmarshal, Unmarshaller}
+import akka.http.scaladsl.unmarshalling.{ Unmarshal, Unmarshaller }
 
-import scala.concurrent.Future
 import scala.xml.NodeSeq
 
 case class Person(name: String, age: Int)
@@ -175,34 +178,57 @@ val personXml =
     <age>25</age>
   </person>
 
-implicit val personUnmarshaller = Unmarshaller[NodeSeq, Person] { xml =>
-  Future(Person((xml \\ "name").text, (xml \\ "age").text.toInt))
+implicit val personUnmarshaller = Unmarshaller.strict[NodeSeq, Person] { xml ⇒
+  Person((xml \\ "name").text, (xml \\ "age").text.toInt)
 }
 
-// you don't need that many marshaller(s)/unmarshaller(s), all variants and constructions are shown here
-val opaquePersonMarshalling = Marshalling.Opaque(() => personXml)
-val openCharsetPersonMarshalling = Marshalling.WithOpenCharset(`text/xml`, (charset: HttpCharset) => personXml)
-val fixedCharsetPersonMarshalling = Marshalling.WithFixedCharset(`text/xml`, `UTF-8`, () => personXml)
+val opaquePersonMarshalling = Marshalling.Opaque(() ⇒ personXml)
+val openCharsetPersonMarshalling = Marshalling.WithOpenCharset(`text/xml`, (charset: HttpCharset) ⇒ personXml)
+val fixedCharsetPersonMarshalling = Marshalling.WithFixedCharset(`text/xml`, `UTF-8`, () ⇒ personXml)
 
-val opaquePersonMarshaller = Marshaller.opaque[Person, NodeSeq] { person => personXml }
-val withFixedCharsetPersonMarshaller = Marshaller.withFixedCharset[Person, NodeSeq](`text/xml`, `UTF-8`) { person => personXml }
-val withOpenCharsetCharsetPersonMarshaller = Marshaller.withOpenCharset[Person, NodeSeq](`text/xml`) { (person, charset) => personXml }
-
-implicit val personMarshaller = Marshaller.strict[Person, NodeSeq] { person =>
-   Marshalling.Opaque(() => personXml),
-}
-
-implicit val personMarshaller = Marshaller.opaque[Person, NodeSeq] { person => personXml }
-
-implicit val personMarshaller = Marshaller[Person, NodeSeq] { person =>
-  Future(List(opaquePersonMarshalling, openCharsetPersonMarshalling, fixedCharsetPersonMarshalling))
-}
+val opaquePersonMarshaller = Marshaller.opaque[Person, NodeSeq] { person ⇒ personXml }
+val withFixedCharsetPersonMarshaller = Marshaller.withFixedCharset[Person, NodeSeq](`text/xml`, `UTF-8`) { person ⇒ personXml }
+val withOpenCharsetCharsetPersonMarshaller = Marshaller.withOpenCharset[Person, NodeSeq](`text/xml`) { (person, charset) ⇒ personXml }
 
 implicit val personMarshaller = Marshaller.oneOf[Person, NodeSeq](opaquePersonMarshaller, withFixedCharsetPersonMarshaller, withOpenCharsetCharsetPersonMarshaller)
 
-Unmarshal(personXml).to[Person].futureValue shouldBe Person("John Doe", 25)
+"personXml" should "be unmarshalled" in {
+  Unmarshal(personXml).to[Person].futureValue shouldBe Person("John Doe", 25)
+}
 
-Marshal(Person("John Doe", 25)).to[NodeSeq].futureValue shouldBe personXml
+"Person" should "be marshalled" in {
+  Marshal(Person("John Doe", 25)).to[NodeSeq].futureValue shouldBe personXml
+}
+```
+
+# Vendor specific media types
+Versioning an API can be tricky. The key is choosing a strategy on how to do versioning. I have found and tried the following stragegies as
+blogged by [Jim Lidell's blog](http://liddellj.com/using-media-type-parameters-to-version-an-http-api/), which is great by the way!
+
+1. 'The URL is king' in which the URL is encoded in the URL eg. `http://localhost:8080/api/v1/person`. The downside of this strategy is that
+the location of a resource may not change, and when we request another representation, the url does change eg. to `http://localhost:8080/api/v2/person`.
+2. Using a version request parameter like: `http://localhost:8080/api/person?version=1`. The downside of this stragegy lies in the fact that resource urls 
+must be as lean as possible, and the only exception is for filtering, sorting, searching and paging, as stated by [Vinay Sahni](http://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api)
+in his great blog 'Best Practices for Designing a Pragmatic RESTful API'.
+3. Both bloggers and I agree that using request headers for versioning, and therefor relying on vendor specific media types is a great way to keep the
+resource urls clean, the location does not change and in code the versioning is only a presentation responsibility, easilly resolved by an
+in scope mashaller.
+
+When you run the example, you can try the following requests:
+
+```bash
+# The latest version in JSON
+curl -H "Accept: application/json" localhost:8080/person
+# The latest version in XML
+curl -H "Accept: application/xml" localhost:8080/person
+# Vendor specific header for JSON v1
+curl -H "Accept: application/vnd.acme.v1+json" localhost:8080/person
+# Vendor specific header for JSON v2
+curl -H "Accept: application/vnd.acme.v2+json" localhost:8080/person
+# Vendor specific header for XML v1
+curl -H "Accept: application/vnd.acme.v1+xml" localhost:8080/person
+# Vendor specific header for XML v2
+curl -H "Accept: application/vnd.acme.v2+xml" localhost:8080/person
 ```
 
 # Video
