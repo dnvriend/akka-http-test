@@ -28,20 +28,11 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.Materializer
 import akka.stream.scaladsl.{ Sink, Source }
+import com.github.dnvriend.GenericServices
 import com.typesafe.config.Config
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
-
-trait GenericServices {
-  implicit def system: ActorSystem
-
-  implicit def log: LoggingAdapter
-
-  implicit def ec: ExecutionContext
-
-  implicit def mat: Materializer
-}
 
 object HttpClientConfig {
   def apply(config: Config): HttpClientConfig =

@@ -16,19 +16,14 @@
 
 package com.github.dnvriend
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model.RequestEntity
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.github.dnvriend.weatherclient.WeatherResult
 import spray.json._
 
-class JsonMarshalUnmarshalTest extends TestSpec {
+class JsonMarshalUnmarshalTest extends TestSpec with Marshallers {
   val personJson = """{"name":"John Doe","age":25}"""
-
-  object TestMarshallers extends Marshallers with DefaultJsonProtocol with SprayJsonSupport
-
-  import TestMarshallers._
 
   val weatherJson = """{
        "coord":{"lon":5.21,"lat":52.37},
@@ -49,16 +44,16 @@ class JsonMarshalUnmarshalTest extends TestSpec {
   }
 
   "Person" should "be marshalled using spray-json" in {
-    Person("John Doe", 25).toJson.compactPrint shouldBe personJson
+    PersonV1("John Doe", 25).toJson.compactPrint shouldBe personJson
   }
 
   it should "be unmarshalled using spray-json" in {
-    personJson.parseJson.convertTo[Person] shouldBe Person("John Doe", 25)
+    personJson.parseJson.convertTo[PersonV1] shouldBe PersonV1("John Doe", 25)
   }
 
   it should "be marshalled / unmarshalled to / from RequestEntity using akka.http.marshalling.Marshal" in {
-    val person = Person("John Doe", 25)
-    val entity = Marshal(person).to[RequestEntity].futureValue
-    Unmarshal(entity).to[Person].futureValue shouldBe person
+    val personV1 = PersonV1("John Doe", 25)
+    val entity = Marshal(personV1).to[RequestEntity].futureValue
+    Unmarshal(entity).to[PersonV1].futureValue shouldBe personV1
   }
 }

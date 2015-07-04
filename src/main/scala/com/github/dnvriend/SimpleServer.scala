@@ -19,13 +19,13 @@ package com.github.dnvriend
 import akka.http.scaladsl._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
-import akka.stream.scaladsl._
+import akka.http.scaladsl.server.Route
 import com.github.dnvriend.domain.Person
 import com.github.dnvriend.util.TimeUtil
 
-trait Service extends Marshallers with CoreServices {
+trait Service extends Marshallers with GenericServices {
 
-  def routes: Flow[HttpRequest, HttpResponse, Unit] =
+  def routes: Route =
     logRequestResult("akka-http-test") {
       path("") {
         redirect("person", StatusCodes.PermanentRedirect)

@@ -231,6 +231,9 @@ curl -H "Accept: application/vnd.acme.v1+xml" localhost:8080/person
 curl -H "Accept: application/vnd.acme.v2+xml" localhost:8080/person
 ```
 
+Please take a look at the [Marshallers](https://github.com/dnvriend/akka-http-test/blob/master/src/main/scala/com/github/dnvriend/Marshallers.scala)
+trait for an example how you could implement this strategy. 
+
 # Video
 - [Parleys - Dr. Roland Kuhn - Akka HTTP - The Reactive Web Toolkit](https://www.parleys.com/tutorial/akka-http-reactive-web-toolkit)
 - [Parleys - Mathias Doenitz - Akka HTTP - Unrest your actors](https://www.parleys.com/tutorial/akka-http-un-rest-your-actors)
