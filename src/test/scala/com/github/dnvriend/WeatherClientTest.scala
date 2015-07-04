@@ -16,19 +16,12 @@
 
 package com.github.dnvriend
 
-import akka.actor.ActorSystem
-import akka.event.{ Logging, LoggingAdapter }
-import akka.stream.{ ActorMaterializer, ActorMaterializerSettings, Materializer, Supervision }
+import com.github.dnvriend.weatherclient.{ Sys, WeatherResult, WeatherClient }
 
-import scala.concurrent.ExecutionContext
-
-trait CoreServices {
-  implicit val system: ActorSystem = ActorSystem()
-  implicit val log: LoggingAdapter = Logging(system, this.getClass)
-  val decider: Supervision.Decider = {
-    case _ ⇒ Supervision.Resume
+class WeatherClientTest extends TestSpec {
+  "Weatherclient" should "get weather result" in {
+    WeatherClient().getWeather.futureValue mustBe {
+      case WeatherResult(_, Sys(_, "NL", _, _), _, "stations", _, _, _, _, _, "Almere Stad", _) ⇒
+    }
   }
-  implicit val mat: Materializer = ActorMaterializer(
-    ActorMaterializerSettings(system).withSupervisionStrategy(decider))
-  implicit val ec: ExecutionContext = system.dispatcher
 }
