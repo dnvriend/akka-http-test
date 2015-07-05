@@ -31,36 +31,56 @@ class MarshallersTest extends TestSpecWithoutSystem with Service with ScalatestR
   val jsonHeader = Accept(`application/json`)
   val xmlHeader = Accept(`application/xml`)
 
+  val jsonHeaderV1 = Accept(MediaVersionTypes.`application/vnd.acme.v1+json`)
+  val jsonHeaderV2 = Accept(MediaVersionTypes.`application/vnd.acme.v2+json`)
   val xmlHeaderV1 = Accept(MediaVersionTypes.`application/vnd.acme.v1+xml`)
   val xmlHeaderV2 = Accept(MediaVersionTypes.`application/vnd.acme.v2+xml`)
 
   "Get to ping" should "should include timestamp field" in {
     Get("/ping") ~> routes ~> check {
+      status shouldEqual OK
       responseAs[String] should include("timestamp")
     }
   }
 
-  "Get to person" should "return person as JSON" in {
+  "Get to person as JSON" should "return v2 for application/json" in {
     Get("/person") ~> addHeader(jsonHeader) ~> routes ~> check {
       status shouldEqual OK
       responseAs[String] shouldBe """{"name":"John Doe","age":25,"married":false}"""
     }
   }
 
-  it should "return person as XML" in {
+  it should "return v1 for application/vnd.acme.v1+json" in {
+    Get("/person") ~> addHeader(jsonHeaderV1) ~> routes ~> check {
+      status shouldEqual OK
+      responseAs[String] shouldBe """{"name":"John Doe","age":25}"""
+    }
+  }
+
+  it should "return v2 for application/vnd.acme.v2+json" in {
+    Get("/person") ~> addHeader(jsonHeaderV2) ~> routes ~> check {
+      status shouldEqual OK
+      responseAs[String] shouldBe """{"name":"John Doe","age":25,"married":false}"""
+    }
+  }
+
+  "Get person as XML" should "return v2 for application/xml" in {
     Get("/person") ~> addHeader(xmlHeader) ~> routes ~> check {
+      status shouldEqual OK
       responseAs[String] should include("<married>")
     }
   }
 
-  it should "return person as XML v1 with vendor media type" in {
+  it should "return v1 for application/vnd.acme.v1+xml" in {
     Get("/person") ~> addHeader(xmlHeaderV1) ~> routes ~> check {
+      status shouldEqual OK
       responseAs[String] should not include "<married>"
     }
   }
 
-  it should "return person as XML v2 with vendor media type" in {
+  it should "return v2 for application/vnd.acme.v2+xml" in {
     Get("/person") ~> addHeader(xmlHeaderV2) ~> routes ~> check {
+      status shouldEqual OK
       responseAs[String] should include("<married>")
     }
   }

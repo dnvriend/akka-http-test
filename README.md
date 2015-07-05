@@ -232,7 +232,8 @@ curl -H "Accept: application/vnd.acme.v2+xml" localhost:8080/person
 ```
 
 Please take a look at the [Marshallers](https://github.com/dnvriend/akka-http-test/blob/master/src/main/scala/com/github/dnvriend/Marshallers.scala)
-trait for an example how you could implement this strategy. 
+trait for an example how you could implement this strategy and the [MarshallersTest](https://github.com/dnvriend/akka-http-test/blob/master/src/test/scala/com/github/dnvriend/MarshallersTest.scala)
+how to test the routes using the `Accept` header and leveraging the media types.
 
 # Video
 - [Parleys - Dr. Roland Kuhn - Akka HTTP - The Reactive Web Toolkit](https://www.parleys.com/tutorial/akka-http-reactive-web-toolkit)
