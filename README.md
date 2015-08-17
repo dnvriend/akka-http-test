@@ -3,6 +3,8 @@ A study project how akka-http works. The code below is a bit compacted, so pleas
 the (new) API must be used. It will not compile/work correctly when you just copy/paste it. Check out the working 
 source code for correct usage.
 
+[![License](http://img.shields.io/:license-Apache%202-red.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt)
+
 # Dependencies
 To use akka-http we need the following dependencies:
 
