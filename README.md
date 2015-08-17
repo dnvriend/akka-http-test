@@ -32,8 +32,8 @@ Dependencies in `build.sbt`:
 
 ```scala
 libraryDependencies ++= {
-  val akkaVersion       = "2.3.11"
-  val akkaStreamVersion = "1.0-RC4"
+  val akkaVersion       = "2.3.12"
+  val akkaStreamVersion = "1.0"
   Seq(
     "com.typesafe.akka"      %% "akka-actor"                           % akkaVersion,
     "com.typesafe.akka"      %% "akka-stream-experimental"             % akkaStreamVersion,
@@ -41,7 +41,7 @@ libraryDependencies ++= {
     "com.typesafe.akka"      %% "akka-http-experimental"               % akkaStreamVersion,
     "com.typesafe.akka"      %% "akka-http-spray-json-experimental"    % akkaStreamVersion,
     "com.typesafe.akka"      %% "akka-http-xml-experimental"           % akkaStreamVersion,
-    "com.typesafe.akka"      %% "akka-http-testkit-experimental"       % akkaStreamVersion,
+    "com.typesafe.akka"      %% "akka-http-testkit-experimental"       % akkaStreamVersion
   )
 }
 ```
@@ -77,8 +77,8 @@ First some Akka Stream parley:
 
 The abstractions above (Flow, Source, Sink, Processing stage) are used to create a processing-stream `template` or `blueprint`. When the template has a `Source` connected to a `Sink` with optionally some `processing stages` between them, such a `template` is called a `Runnable Flow`. 
 
-The materializer for `akka-stream` is the [ActorMaterializer](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC4/#akka.stream.ActorMaterializer) 
-which takes the list of transformations comprising a [akka.stream.scaladsl.Flow](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC4/#akka.stream.javadsl.Flow) 
+The materializer for `akka-stream` is the [ActorMaterializer](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0/#akka.stream.ActorMaterializer) 
+which takes the list of transformations comprising a [akka.stream.scaladsl.Flow](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0/#akka.stream.javadsl.Flow) 
 and materializes them in the form of [org.reactivestreams.Processor](https://github.com/reactive-streams/reactive-streams-jvm/blob/master/api/src/main/java/org/reactivestreams/Processor.java) 
 instances, in which every stage is converted into one actor.
 
@@ -148,16 +148,16 @@ Unmarshal(entity).to[Person].futureValue shouldBe person
 
 # Custom Marshalling/Unmarshalling
 Akka http has a cleaner API for custom types compared to Spray's. Out of the box it has support to marshal to/from basic types (Byte/String/NodeSeq) and 
-so we can marshal/unmarshal from/to case classes from any line format. The API uses the [Marshal](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC4/#akka.http.scaladsl.marshalling.Marshal) 
-object to do the marshalling and the [Unmarshal](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC4/#akka.http.scaladsl.unmarshalling.Unmarshal)
+so we can marshal/unmarshal from/to case classes from any line format. The API uses the [Marshal](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0/#akka.http.scaladsl.marshalling.Marshal) 
+object to do the marshalling and the [Unmarshal](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0/#akka.http.scaladsl.unmarshalling.Unmarshal)
 object to to the unmarshal process. Both interfaces return Futures that contain the outcome. 
 
-The `Unmarshal` class uses an [Unmarshaller](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC4/#akka.http.scaladsl.unmarshalling.Unmarshaller) 
+The `Unmarshal` class uses an [Unmarshaller](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0/#akka.http.scaladsl.unmarshalling.Unmarshaller) 
 that defines how an encoding like eg `XML` can be converted from eg. a `NodeSeq` to a custom type, like eg. a `Person`. 
 
-To `Marshal` class uses [Marshaller](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC4/#akka.http.javadsl.server.Marshaller)s
-to do the heavy lifting. There are three kinds of marshallers, they all do the same, but one is not interested in the [MediaType](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC4/#akka.http.javadsl.model.MediaType) 
-, the `opaque` marshaller, then there is the `withOpenCharset` marshaller, that is only interested in the mediatype, and forwards the received [HttpCharset](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0-RC4/#akka.http.scaladsl.model.HttpCharset) 
+To `Marshal` class uses [Marshaller](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0/#akka.http.javadsl.server.Marshaller)s
+to do the heavy lifting. There are three kinds of marshallers, they all do the same, but one is not interested in the [MediaType](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0/#akka.http.javadsl.model.MediaType) 
+, the `opaque` marshaller, then there is the `withOpenCharset` marshaller, that is only interested in the mediatype, and forwards the received [HttpCharset](http://doc.akka.io/api/akka-stream-and-http-experimental/1.0/#akka.http.scaladsl.model.HttpCharset) 
 to the `marshal function` so that the responsibility for handling the character encoding is up to the developer, 
 and the last one, the `withFixedCharset` will handle only HttpCharsets that match the marshaller configured one. 
  
