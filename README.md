@@ -28,23 +28,12 @@ To use akka-http we need the following dependencies:
 * `akka-http-spray-json-experimental:`:
   * Provides spray-json support
 
-Dependencies in `build.sbt`:
-
-```scala
-libraryDependencies ++= {
-  val akkaVersion       = "2.3.12"
-  val akkaStreamVersion = "1.0"
-  Seq(
-    "com.typesafe.akka"      %% "akka-actor"                           % akkaVersion,
-    "com.typesafe.akka"      %% "akka-stream-experimental"             % akkaStreamVersion,
-    "com.typesafe.akka"      %% "akka-http-core-experimental"          % akkaStreamVersion,
-    "com.typesafe.akka"      %% "akka-http-experimental"               % akkaStreamVersion,
-    "com.typesafe.akka"      %% "akka-http-spray-json-experimental"    % akkaStreamVersion,
-    "com.typesafe.akka"      %% "akka-http-xml-experimental"           % akkaStreamVersion,
-    "com.typesafe.akka"      %% "akka-http-testkit-experimental"       % akkaStreamVersion
-  )
-}
-```
+# Web Service Clients (RPC)
+Akka-Http has a client API and as such RPC's can be created. Take a look at the package `com.github.dnvriend.webservices`, I have created
+some example RPC style web service clients for `eetnu`, `iens`, `postcode`, `openWeatherApi`, based on the generic `com.github.dnvriend.webservices.generic.HttpClient`
+client that supports Http and SSL connections with basic authentication or one legged OAuth1 with consumerKey and consumerSecret configuration
+from `application.conf`. The RPC clients also support for single RPC without cached connections and the streaming cached connection style where
+you can stream data to your clients. For usage please see the tests for the RPC clients. Good stuff :)
 
 # Web Server
 A new HTTP server can be launched using the `Http()` class. The `bindAndHandle()` method is a convenience method which starts 

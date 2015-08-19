@@ -33,12 +33,12 @@ import scala.io.Source
 import scala.util.Try
 
 class TestSpec extends FlatSpec with Matchers with ScalaFutures with TryValues with OptionValues with BeforeAndAfterAll {
-  implicit val timeout: Timeout = Timeout(10.seconds)
+  implicit val timeout: Timeout = Timeout(1.minute)
   implicit val system: ActorSystem = ActorSystem()
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val mat: Materializer = ActorMaterializer()
   implicit val log: LoggingAdapter = Logging(system, this.getClass)
-  implicit val pc: PatienceConfig = PatienceConfig(timeout = 10.seconds)
+  implicit val pc: PatienceConfig = PatienceConfig(timeout = 1.minute)
 
   def randomId: String = UUID.randomUUID.toString
   val id: String = randomId

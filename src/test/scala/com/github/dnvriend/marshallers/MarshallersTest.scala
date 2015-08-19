@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.github.dnvriend
+package com.github.dnvriend.marshallers
 
-import akka.http.scaladsl.model.MediaTypes
 import akka.http.scaladsl.model.MediaTypes._
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.testkit.ScalatestRouteTest
+import com.github.dnvriend.{ MediaVersionTypes, Service, TestSpecWithoutSystem }
 
 /**
  * see: https://github.com/akka/akka/blob/releasing-akka-stream-and-http-experimental-1.0-RC4/akka-http-testkit/src/test/scala/akka/http/scaladsl/testkit/ScalatestRouteTestSpec.scala

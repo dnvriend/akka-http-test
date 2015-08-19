@@ -14,14 +14,6 @@
  * limitations under the License.
  */
 
-package com.github
+package com.github.dnvriend.webservices.common
 
-import akka.event.LoggingAdapter
-import spray.json._
-
-package object dnvriend {
-  implicit def to[T](json: String)(implicit ev: spray.json.JsonReader[T], log: LoggingAdapter): T = {
-    log.debug("Unmarshalling JSON: {}", json)
-    json.parseJson.convertTo[T]
-  }
-}
+case class LatLon(lat: Double, lon: Double)

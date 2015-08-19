@@ -23,7 +23,6 @@ import akka.http.scaladsl.model._
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import com.github.dnvriend.domain.Person
-import com.github.dnvriend.weatherclient._
 import spray.json.{ DefaultJsonProtocol, _ }
 
 import scala.concurrent.ExecutionContext
@@ -57,14 +56,6 @@ trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXm
   implicit val personJsonFormatV2 = jsonFormat3(PersonV2)
 
   implicit val pingJsonFormat = jsonFormat1(Ping)
-
-  implicit val windJsonFormat = jsonFormat2(Wind)
-  implicit val mainJsonFormat = jsonFormat7(Main)
-  implicit val cloudJsonFormat = jsonFormat1(Cloud)
-  implicit val weatherJsonFormat = jsonFormat4(Weather)
-  implicit val sysJsonFormat = jsonFormat4(Sys)
-  implicit val coordJsonFormat = jsonFormat2(Coord)
-  implicit val weatherResultJsonFormat = jsonFormat11(WeatherResult)
 
   def marshalPersonXmlV2(person: PersonV2): NodeSeq =
     <person>

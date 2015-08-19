@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package com.github.dnvriend
+package com.github.dnvriend.marshallers
 
 import akka.http.scaladsl.marshalling.{ Marshal, Marshaller, Marshalling }
 import akka.http.scaladsl.model.HttpCharset
 import akka.http.scaladsl.model.HttpCharsets._
 import akka.http.scaladsl.model.MediaTypes._
 import akka.http.scaladsl.unmarshalling.{ Unmarshal, Unmarshaller }
+import com.github.dnvriend.TestSpec
 
 import scala.xml.NodeSeq
 
