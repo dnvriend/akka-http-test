@@ -42,7 +42,7 @@ class WeatherClientTest extends TestSpec with Marshallers {
 
   "Weatherclient" should "get weather result" in {
     OpenWeatherApi().getWeather("1313", "nl").futureValue.value mustBe {
-      case WeatherResult(_, Sys(_, "NL", _, _), _, "stations", _, _, _, _, _, "Almere Stad", _) ⇒
+      case WeatherResult(_, Sys(_, "NL", _, _), _, _, _, _, _, _, _, "Almere Stad", _) ⇒
     }
   }
 

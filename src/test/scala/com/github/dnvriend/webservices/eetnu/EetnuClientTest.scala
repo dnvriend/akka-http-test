@@ -27,14 +27,14 @@ class EetnuClientTest extends TestSpec {
         1770, // id
         "Teddy Snack",
         "Snackbars",
-        Some("+31 36 533 5529"),
-        None,
-        None,
-        None,
-        None,
-        None,
-        Some(91), // rating
-        Some("https://www.eet.nu/almere/teddy-snack"),
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _, // rating
+        _,
         _,
         _,
         Address(
@@ -79,14 +79,14 @@ class EetnuClientTest extends TestSpec {
         1770, // id
         "Teddy Snack",
         "Snackbars",
-        Some("+31 36 533 5529"),
-        None,
-        None,
-        None,
-        None,
-        None,
-        Some(91), // rating
-        Some("https://www.eet.nu/almere/teddy-snack"),
+        _,
+        _,
+        _,
+        _,
+        _,
+        _,
+        _, // rating
+        _,
         _,
         _,
         Address(
@@ -96,7 +96,7 @@ class EetnuClientTest extends TestSpec {
           "Flevoland",
           "The Netherlands"
           ),
-        "regular", // plan
+        _, // plan
         Images(List())) ⇒
     }
   }

@@ -31,8 +31,18 @@ trait Service extends Marshallers with GenericServices {
         redirect("person", StatusCodes.PermanentRedirect)
       } ~
         pathPrefix("person") {
-          complete {
-            Person("John Doe", 25)
+          pathEnd {
+            get {
+              complete {
+                println("GET")
+                Person("John Doe", 25)
+              }
+            } ~
+              post {
+                entity(as[Person]) { person ⇒
+                  complete(StatusCodes.OK, person.toString)
+                }
+              }
           }
         } ~
         pathPrefix("ping") {

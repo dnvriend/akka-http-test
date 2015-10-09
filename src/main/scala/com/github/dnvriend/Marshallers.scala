@@ -20,13 +20,15 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport
 import akka.http.scaladsl.marshalling._
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.unmarshalling.{ FromRequestUnmarshaller, Unmarshaller, FromEntityUnmarshaller }
+import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import com.github.dnvriend.domain.Person
 import spray.json.{ DefaultJsonProtocol, _ }
 
 import scala.concurrent.ExecutionContext
-import scala.xml.NodeSeq
+import scala.xml.{ Elem, XML, NodeSeq }
 
 /**
  * See: http://liddellj.com/using-media-type-parameters-to-version-an-http-api/
@@ -180,4 +182,66 @@ trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXm
     }
   )
 
+  // curl -X POST -H "Content-Type: application/xml" -d '<person><name>John Doe</name><age>25</age><married>true</married></person>' localhost:8080/person
+  def personXmlEntityUnmarshaller(implicit mat: Materializer): FromEntityUnmarshaller[Person] =
+    Unmarshaller.byteStringUnmarshaller.forContentTypes(MediaTypes.`application/xml`).mapWithCharset { (data, charset) ⇒
+      val input: String = if (charset == HttpCharsets.`UTF-8`) data.utf8String else data.decodeString(charset.nioCharset.name)
+      val xml: Elem = XML.loadString(input)
+      val name: String = (xml \\ "name").text
+      val age: Int = (xml \\ "age").text.toInt
+      val married: Boolean = (xml \\ "married").text.toBoolean
+      Person(name, age, married)
+    }
+
+  // curl -X POST -H "Content-Type: application/vnd.acme.v1+xml" -d '<person><name>John Doe</name><age>25</age></person>' localhost:8080/person
+  def personXmlV1EntityUnmarshaller(implicit mat: Materializer): FromEntityUnmarshaller[Person] =
+    Unmarshaller.byteStringUnmarshaller.forContentTypes(MediaVersionTypes.`application/vnd.acme.v1+xml`).mapWithCharset { (data, charset) ⇒
+      val input: String = if (charset == HttpCharsets.`UTF-8`) data.utf8String else data.decodeString(charset.nioCharset.name)
+      val xml: Elem = XML.loadString(input)
+      val name: String = (xml \\ "name").text
+      val age: Int = (xml \\ "age").text.toInt
+      Person(name, age)
+    }
+
+  // curl -X POST -H "Content-Type: application/vnd.acme.v2+xml" -d '<person><name>John Doe</name><age>25</age><married>true</married></person>' localhost:8080/person
+  def personXmlV2EntityUnmarshaller(implicit mat: Materializer): FromEntityUnmarshaller[Person] =
+    Unmarshaller.byteStringUnmarshaller.forContentTypes(MediaVersionTypes.`application/vnd.acme.v2+xml`).mapWithCharset { (data, charset) ⇒
+      val input: String = if (charset == HttpCharsets.`UTF-8`) data.utf8String else data.decodeString(charset.nioCharset.name)
+      val xml: Elem = XML.loadString(input)
+      val name: String = (xml \\ "name").text
+      val age: Int = (xml \\ "age").text.toInt
+      val married: Boolean = (xml \\ "married").text.toBoolean
+      Person(name, age, married)
+    }
+
+  // curl -X POST -H "Content-Type: application/json" -d '{"age": 25, "married": false, "name": "John Doe"}' localhost:8080/person
+  def personJsonEntityUnmarshaller(implicit mat: Materializer): FromEntityUnmarshaller[Person] =
+    Unmarshaller.byteStringUnmarshaller.forContentTypes(MediaTypes.`application/json`).mapWithCharset { (data, charset) ⇒
+      val input: String = if (charset == HttpCharsets.`UTF-8`) data.utf8String else data.decodeString(charset.nioCharset.name)
+      val tmp = input.parseJson.convertTo[PersonV2]
+      Person(tmp.name, tmp.age, tmp.married)
+    }
+
+  // curl -X POST -H "Content-Type: application/vnd.acme.v1+json" -d '{"age": 25, "name": "John Doe"}' localhost:8080/person
+  def personJsonV1EntityUnmarshaller(implicit mat: Materializer): FromEntityUnmarshaller[Person] =
+    Unmarshaller.byteStringUnmarshaller.forContentTypes(MediaVersionTypes.`application/vnd.acme.v1+json`).mapWithCharset { (data, charset) ⇒
+      val input: String = if (charset == HttpCharsets.`UTF-8`) data.utf8String else data.decodeString(charset.nioCharset.name)
+      val tmp = input.parseJson.convertTo[PersonV1]
+      Person(tmp.name, tmp.age)
+    }
+
+  // curl -X POST -H "Content-Type: application/vnd.acme.v2+json" -d '{"age": 25, "married": false, "name": "John Doe"}' localhost:8080/person
+  def personJsonV2EntityUnmarshaller(implicit mat: Materializer): FromEntityUnmarshaller[Person] =
+    Unmarshaller.byteStringUnmarshaller.forContentTypes(MediaVersionTypes.`application/vnd.acme.v2+json`).mapWithCharset { (data, charset) ⇒
+      val input: String = if (charset == HttpCharsets.`UTF-8`) data.utf8String else data.decodeString(charset.nioCharset.name)
+      val tmp = input.parseJson.convertTo[PersonV2]
+      Person(tmp.name, tmp.age, tmp.married)
+    }
+
+  // will be used by the unmarshallers above
+  implicit def personUnmarshaller(implicit mat: Materializer): FromEntityUnmarshaller[Person] =
+    Unmarshaller.firstOf[HttpEntity, Person](
+      personXmlEntityUnmarshaller, personXmlV1EntityUnmarshaller, personXmlV2EntityUnmarshaller,
+      personJsonEntityUnmarshaller, personJsonV1EntityUnmarshaller, personJsonV2EntityUnmarshaller
+    )
 }
