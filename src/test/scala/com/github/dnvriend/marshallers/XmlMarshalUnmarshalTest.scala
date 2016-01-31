@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Dennis Vriend
+ * Copyright 2016 Dennis Vriend
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,8 @@
 package com.github.dnvriend.marshallers
 
 import akka.http.scaladsl.marshalling.{ Marshal, Marshaller, Marshalling }
-import akka.http.scaladsl.model.HttpCharset
-import akka.http.scaladsl.model.HttpCharsets._
 import akka.http.scaladsl.model.MediaTypes._
+import akka.http.scaladsl.model.{ ContentTypes, HttpCharset }
 import akka.http.scaladsl.unmarshalling.{ Unmarshal, Unmarshaller }
 import com.github.dnvriend.TestSpec
 
@@ -41,10 +40,10 @@ class XmlMarshalUnmarshalTest extends TestSpec {
 
   val opaquePersonMarshalling = Marshalling.Opaque(() ⇒ personXml)
   val openCharsetPersonMarshalling = Marshalling.WithOpenCharset(`text/xml`, (charset: HttpCharset) ⇒ personXml)
-  val fixedCharsetPersonMarshalling = Marshalling.WithFixedCharset(`text/xml`, `UTF-8`, () ⇒ personXml)
+  val fixedCharsetPersonMarshalling = Marshalling.WithFixedContentType(ContentTypes.`text/xml(UTF-8)`, () ⇒ personXml)
 
   val opaquePersonMarshaller = Marshaller.opaque[Person, NodeSeq] { person ⇒ personXml }
-  val withFixedCharsetPersonMarshaller = Marshaller.withFixedCharset[Person, NodeSeq](`text/xml`, `UTF-8`) { person ⇒ personXml }
+  val withFixedCharsetPersonMarshaller = Marshaller.withFixedContentType[Person, NodeSeq](ContentTypes.`text/xml(UTF-8)`) { person ⇒ personXml }
   val withOpenCharsetCharsetPersonMarshaller = Marshaller.withOpenCharset[Person, NodeSeq](`text/xml`) { (person, charset) ⇒ personXml }
 
   implicit val personMarshaller = Marshaller.oneOf[Person, NodeSeq](opaquePersonMarshaller, withFixedCharsetPersonMarshaller, withOpenCharsetCharsetPersonMarshaller)

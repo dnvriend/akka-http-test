@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Dennis Vriend
+ * Copyright 2016 Dennis Vriend
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,7 +67,6 @@ class TestSpec extends FlatSpec with Matchers with ScalaFutures with TryValues w
     getClass.getClassLoader.getResourceAsStream(fileName)
 
   override protected def afterAll(): Unit = {
-    system.shutdown()
-    system.awaitTermination()
+    system.terminate().toTry should be a 'success
   }
 }
