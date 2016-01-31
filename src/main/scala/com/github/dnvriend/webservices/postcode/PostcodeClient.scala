@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Dennis Vriend
+ * Copyright 2016 Dennis Vriend
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.github.dnvriend.webservices.postcode
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.{ HttpRequest, HttpResponse }
@@ -55,7 +56,7 @@ case class GetAddressRequest(zip: String, houseNumber: String)
 trait PostcodeClient {
   def address(postcode: String, houseNumber: Int): Future[Option[Address]]
 
-  def address[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(GetAddressRequest, T), (Option[Address], T), Unit]
+  def address[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(GetAddressRequest, T), (Option[Address], T), NotUsed]
 }
 
 object PostcodeClient {
@@ -69,14 +70,15 @@ object PostcodeClient {
   def responseToString(resp: HttpResponse)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Future[String] =
     HttpClient.responseToString(resp)
 
-  def getAddressRequestFlow[T]: Flow[(GetAddressRequest, T), (HttpRequest, T), Unit] =
+  def getAddressRequestFlow[T]: Flow[(GetAddressRequest, T), (HttpRequest, T), NotUsed] =
     Flow[(GetAddressRequest, T)].map { case (request, id) ⇒ (HttpClient.mkGetRequest(s"/rest/addresses/${request.zip}/${request.houseNumber}/"), id) }
 
-  def mapResponseToAddressFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[Address]): Flow[(Try[HttpResponse], T), (Option[Address], T), Unit] =
+  def mapResponseToAddressFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[Address]): Flow[(Try[HttpResponse], T), (Option[Address], T), NotUsed] =
     HttpClient.responseToString[T].map { case (json, id) ⇒ (mapToAddress(json), id) }
   /**
    * Returns an option of the zipcode without spaces, if there were any. Any invalid zipcode
    * will be returned as None
+   *
    * @param zipcode
    * @return
    */
@@ -100,7 +102,7 @@ class PostcodeClientImpl()(implicit val system: ActorSystem, val mat: Materializ
       case None ⇒ Future.successful(None)
     }
 
-  override def address[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(GetAddressRequest, T), (Option[Address], T), Unit] =
+  override def address[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(GetAddressRequest, T), (Option[Address], T), NotUsed] =
     getAddressRequestFlow[T]
       .via(client.cachedHostConnectionFlow[T])
       .via(mapResponseToAddressFlow[T])

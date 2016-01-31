@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Dennis Vriend
+ * Copyright 2016 Dennis Vriend
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.github.dnvriend.webservices.generic
 
 import java.net.URLEncoder
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
@@ -83,7 +84,7 @@ object HttpClient {
     case status ⇒ Unmarshal(response.entity).to[String]
   }
 
-  def responseToString[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(Try[HttpResponse], T), (String, T), Unit] =
+  def responseToString[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(Try[HttpResponse], T), (String, T), NotUsed] =
     Flow[(Try[HttpResponse], T)].mapAsync(1) {
       case (Failure(t), e)    ⇒ Future.failed(t)
       case (Success(resp), e) ⇒ responseToString(resp).map(str ⇒ (str, e))
@@ -122,13 +123,13 @@ object HttpClient {
    * An encrypted cached host connection pool Flow
    */
   def cachedTlsConnection[T](host: String, port: Int)(implicit system: ActorSystem, mat: Materializer): Flow[(HttpRequest, T), (Try[HttpResponse], T), Http.HostConnectionPool] =
-    Http().cachedHostConnectionPoolTls[T](host, port)
+    Http().cachedHostConnectionPoolHttps[T](host, port)
 
   /**
    * An encrypted HTTP client connection to the given endpoint.
    */
   def tlsConnection(host: String, port: Int)(implicit system: ActorSystem): Flow[HttpRequest, HttpResponse, Future[Http.OutgoingConnection]] =
-    Http().outgoingConnectionTls(host, port)
+    Http().outgoingConnectionHttps(host, port)
 
   /**
    * A HTTP client connection to the given endpoint.
@@ -148,7 +149,7 @@ object HttpClient {
     if (config.tls) tlsConnection(config.host, config.port) else
       httpConnection(config.host, config.port)
 
-  def cachedConnectionPipeline[T](config: HttpClientConfig)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(HttpRequest, T), (Try[HttpResponse], T), Unit] =
+  def cachedConnectionPipeline[T](config: HttpClientConfig)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(HttpRequest, T), (Try[HttpResponse], T), NotUsed] =
     Flow[(HttpRequest, T)].mapAsync(1) {
       case (request, id) ⇒ addCredentials(config)(request).map(req ⇒ (req, id))
     }.via(cachedConnection(config))
@@ -201,7 +202,7 @@ class HttpClient(val config: HttpClientConfig)(implicit val system: ActorSystem,
    * A cached host connection pool Flow that will be configured based on the client configuration. It accepts 'tagged' tuples of
    * (HttpRequest, T) elements and outputs 'tagged' tuples of (Try[HttpResponse], T) elements
    */
-  def cachedHostConnectionFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(HttpRequest, T), (Try[HttpResponse], T), Unit] =
+  def cachedHostConnectionFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(HttpRequest, T), (Try[HttpResponse], T), NotUsed] =
     cachedConnectionPipeline(config)
 
   def get(url: String, body: String = "", queryParamsMap: Map[String, String] = Map.empty, headersMap: Map[String, String] = Map.empty): Future[HttpResponse] =

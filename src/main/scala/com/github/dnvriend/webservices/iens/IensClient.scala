@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Dennis Vriend
+ * Copyright 2016 Dennis Vriend
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.github.dnvriend.webservices.iens
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.{ HttpRequest, HttpResponse }
@@ -67,7 +68,7 @@ object IensClient {
   def asGetReviewResponse(json: String)(implicit reader: JsonReader[GetReviewResponse]): GetReviewResponse =
     json.parseJson.convertTo[GetReviewResponse]
 
-  def restaurantsByGeoRequestFlow[T]: Flow[(LatLon, T), (HttpRequest, T), Unit] =
+  def restaurantsByGeoRequestFlow[T]: Flow[(LatLon, T), (HttpRequest, T), NotUsed] =
     Flow[(LatLon, T)].map {
       case (LatLon(lat, lon), id) ⇒
         val requestParams = Map(
@@ -79,27 +80,27 @@ object IensClient {
         (HttpClient.mkGetRequest("/rest/restaurant", "", requestParams), id)
     }
 
-  def asSearchRestaurantsResponseFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[SearchRestaurantsResponse]): Flow[(Try[HttpResponse], T), (Try[SearchRestaurantsResponse], T), Unit] =
-    HttpClient.responseToString[T].map {
+  def asSearchRestaurantsResponseFlow[A](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[SearchRestaurantsResponse]): Flow[(Try[HttpResponse], A), (Try[SearchRestaurantsResponse], A), NotUsed] =
+    HttpClient.responseToString[A].map {
       case (json, id) ⇒ (Try(json.parseJson.convertTo[SearchRestaurantsResponse]), id)
     }
 
-  def restaurantDetailsRequestFlow[T]: Flow[(Long, T), (HttpRequest, T), Unit] =
+  def restaurantDetailsRequestFlow[T]: Flow[(Long, T), (HttpRequest, T), NotUsed] =
     Flow[(Long, T)].map {
       case (vendorId, id) ⇒ (HttpClient.mkGetRequest("/rest/restaurant", queryParamsMap = Map("id" -> "getrestaurantdetails", "restaurant_id" -> vendorId.toString)), id)
     }
 
-  def asGetRestaurantDetailsResponseFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[GetRestaurantDetailsResponse]): Flow[(Try[HttpResponse], T), (Try[GetRestaurantDetailsResponse], T), Unit] =
+  def asGetRestaurantDetailsResponseFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[GetRestaurantDetailsResponse]): Flow[(Try[HttpResponse], T), (Try[GetRestaurantDetailsResponse], T), NotUsed] =
     HttpClient.responseToString[T].map {
       case (json, id) ⇒ (Try(json.parseJson.convertTo[GetRestaurantDetailsResponse]), id)
     }
 
-  def reviewsRequestFlow[T]: Flow[(Long, T), (HttpRequest, T), Unit] =
+  def reviewsRequestFlow[T]: Flow[(Long, T), (HttpRequest, T), NotUsed] =
     Flow[(Long, T)].map {
       case (vendorId, id) ⇒ (HttpClient.mkGetRequest("/rest/review", queryParamsMap = Map("restaurant_id" -> id.toString)), id)
     }
 
-  def asGetReviewResponseFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[GetReviewResponse]): Flow[(Try[HttpResponse], T), (Try[GetReviewResponse], T), Unit] =
+  def asGetReviewResponseFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[GetReviewResponse]): Flow[(Try[HttpResponse], T), (Try[GetReviewResponse], T), NotUsed] =
     HttpClient.responseToString[T].map {
       case (json, id) ⇒ (Try(json.parseJson.convertTo[GetReviewResponse]), id)
     }
@@ -108,15 +109,15 @@ object IensClient {
 trait IensClient {
   def restaurantsByGeo(langitude: Double, longitude: Double, limit: Int = Int.MaxValue, offset: Int = 0): Future[SearchRestaurantsResponse]
 
-  def restaurantsByGeo[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(LatLon, T), (Try[SearchRestaurantsResponse], T), Unit]
+  def restaurantsByGeo[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(LatLon, T), (Try[SearchRestaurantsResponse], T), NotUsed]
 
   def restaurantDetails(id: Long): Future[GetRestaurantDetailsResponse]
 
-  def restaurantDetails[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(Long, T), (Try[GetRestaurantDetailsResponse], T), Unit]
+  def restaurantDetails[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(Long, T), (Try[GetRestaurantDetailsResponse], T), NotUsed]
 
   def reviews(id: Long): Future[GetReviewResponse]
 
-  def reviews[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(Long, T), (Try[GetReviewResponse], T), Unit]
+  def reviews[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(Long, T), (Try[GetReviewResponse], T), NotUsed]
 }
 
 class IensClientImpl()(implicit val system: ActorSystem, val mat: Materializer, val ec: ExecutionContext, val log: LoggingAdapter) extends IensClient with Marshallers {
@@ -135,7 +136,7 @@ class IensClientImpl()(implicit val system: ActorSystem, val mat: Materializer, 
       .map(asSearchRestaurantsResponse)
   }
 
-  override def restaurantsByGeo[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(LatLon, T), (Try[SearchRestaurantsResponse], T), Unit] =
+  override def restaurantsByGeo[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(LatLon, T), (Try[SearchRestaurantsResponse], T), NotUsed] =
     restaurantsByGeoRequestFlow[T]
       .via(client.cachedHostConnectionFlow[T])
       .via(asSearchRestaurantsResponseFlow[T])
@@ -146,7 +147,7 @@ class IensClientImpl()(implicit val system: ActorSystem, val mat: Materializer, 
       .map(asGetRestaurantDetailsResponse)
   }
 
-  override def restaurantDetails[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(Long, T), (Try[GetRestaurantDetailsResponse], T), Unit] =
+  override def restaurantDetails[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(Long, T), (Try[GetRestaurantDetailsResponse], T), NotUsed] =
     restaurantDetailsRequestFlow[T]
       .via(client.cachedHostConnectionFlow[T])
       .via(asGetRestaurantDetailsResponseFlow[T])
@@ -156,7 +157,7 @@ class IensClientImpl()(implicit val system: ActorSystem, val mat: Materializer, 
       .flatMap(responseToString)
       .map(asGetReviewResponse)
 
-  override def reviews[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(Long, T), (Try[GetReviewResponse], T), Unit] =
+  override def reviews[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(Long, T), (Try[GetReviewResponse], T), NotUsed] =
     reviewsRequestFlow[T]
       .via(client.cachedHostConnectionFlow[T])
       .via(asGetReviewResponseFlow[T])

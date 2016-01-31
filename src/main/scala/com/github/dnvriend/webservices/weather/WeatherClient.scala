@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Dennis Vriend
+ * Copyright 2016 Dennis Vriend
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.github.dnvriend.webservices.weather
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.{ HttpRequest, HttpResponse }
@@ -50,7 +51,7 @@ case class GetWeatherRequest(zip: String, country: String)
 trait OpenWeatherApi {
   def getWeather(zip: String, country: String): Future[Option[WeatherResult]]
 
-  def getWeather[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(GetWeatherRequest, T), (Option[WeatherResult], T), Unit]
+  def getWeather[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(GetWeatherRequest, T), (Option[WeatherResult], T), NotUsed]
 }
 
 object OpenWeatherApi {
@@ -63,10 +64,10 @@ object OpenWeatherApi {
   def responseToString(resp: HttpResponse)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Future[String] =
     HttpClient.responseToString(resp)
 
-  def getWeatherRequestFlow[T]: Flow[(GetWeatherRequest, T), (HttpRequest, T), Unit] =
+  def getWeatherRequestFlow[T]: Flow[(GetWeatherRequest, T), (HttpRequest, T), NotUsed] =
     Flow[(GetWeatherRequest, T)].map { case (request, id) ⇒ (HttpClient.mkGetRequest(s"/data/2.5/weather?zip=${request.zip},${request.country}"), id) }
 
-  def mapResponseToWeatherResultFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[WeatherResult]): Flow[(Try[HttpResponse], T), (Option[WeatherResult], T), Unit] =
+  def mapResponseToWeatherResultFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[WeatherResult]): Flow[(Try[HttpResponse], T), (Option[WeatherResult], T), NotUsed] =
     HttpClient.responseToString[T].map { case (json, id) ⇒ (mapResponseToWeatherResult(json), id) }
 }
 
@@ -80,7 +81,7 @@ class OpenWeatherApiImpl()(implicit val system: ActorSystem, val ec: ExecutionCo
       flatMap(responseToString)
       .map(mapResponseToWeatherResult)
 
-  override def getWeather[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(GetWeatherRequest, T), (Option[WeatherResult], T), Unit] =
+  override def getWeather[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(GetWeatherRequest, T), (Option[WeatherResult], T), NotUsed] =
     getWeatherRequestFlow[T]
       .via(client.cachedHostConnectionFlow[T])
       .via(mapResponseToWeatherResultFlow[T])

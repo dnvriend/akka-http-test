@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Dennis Vriend
+ * Copyright 2016 Dennis Vriend
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,10 +40,11 @@ import scala.xml.{ Elem, XML, NodeSeq }
  * return that representation
  */
 object MediaVersionTypes {
-  val `application/vnd.acme.v1+json` = MediaType.custom("application/vnd.acme.v1+json", MediaType.Encoding.Fixed(HttpCharsets.`UTF-8`))
-  val `application/vnd.acme.v2+json` = MediaType.custom("application/vnd.acme.v2+json", MediaType.Encoding.Fixed(HttpCharsets.`UTF-8`))
-  val `application/vnd.acme.v1+xml` = MediaType.custom("application/vnd.acme.v1+xml", MediaType.Encoding.Fixed(HttpCharsets.`UTF-8`))
-  val `application/vnd.acme.v2+xml` = MediaType.custom("application/vnd.acme.v2+xml", MediaType.Encoding.Fixed(HttpCharsets.`UTF-8`))
+  def customMediatype(subType: String) = MediaType.customWithFixedCharset("application", subType, HttpCharsets.`UTF-8`)
+  val `application/vnd.acme.v1+json` = customMediatype("vnd.acme.v1+json")
+  val `application/vnd.acme.v2+json` = customMediatype("vnd.acme.v2+json")
+  val `application/vnd.acme.v1+xml` = customMediatype("vnd.acme.v1+xml")
+  val `application/vnd.acme.v2+xml` = customMediatype("vnd.acme.v2+xml")
 }
 
 // marshalling containers (Value Objects)
@@ -95,45 +96,45 @@ trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXm
    * communicate with the VO in the API
    */
   implicit def personsMarshaller: ToResponseMarshaller[Iterable[Person]] = Marshaller.oneOf(
-    Marshaller.withFixedCharset(MediaTypes.`application/json`, HttpCharsets.`UTF-8`) { persons ⇒
+    Marshaller.withFixedContentType(MediaTypes.`application/json`) { persons ⇒
       HttpResponse(entity =
-        HttpEntity(ContentType(MediaTypes.`application/json`, HttpCharsets.`UTF-8`), persons.map(person ⇒ PersonV2(person.name, person.age, person.married)).toJson.compactPrint)
+        HttpEntity(ContentType(MediaTypes.`application/json`), persons.map(person ⇒ PersonV2(person.name, person.age, person.married)).toJson.compactPrint)
       )
     },
-    Marshaller.withFixedCharset(MediaVersionTypes.`application/vnd.acme.v1+json`, HttpCharsets.`UTF-8`) { persons ⇒
+    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v1+json`) { persons ⇒
       HttpResponse(entity =
-        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v1+json`, HttpCharsets.`UTF-8`), persons.map(person ⇒ PersonV1(person.name, person.age)).toJson.compactPrint)
+        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v1+json`), persons.map(person ⇒ PersonV1(person.name, person.age)).toJson.compactPrint)
       )
     },
-    Marshaller.withFixedCharset(MediaVersionTypes.`application/vnd.acme.v2+json`, HttpCharsets.`UTF-8`) { persons ⇒
+    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v2+json`) { persons ⇒
       HttpResponse(entity =
-        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v2+json`, HttpCharsets.`UTF-8`), persons.map(person ⇒ PersonV2(person.name, person.age, person.married)).toJson.compactPrint)
+        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v2+json`), persons.map(person ⇒ PersonV2(person.name, person.age, person.married)).toJson.compactPrint)
       )
-    },
-    Marshaller.withFixedCharset(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`) { persons ⇒
-      HttpResponse(entity =
-        HttpEntity.CloseDelimited(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`),
-          Source(Marshal(persons.map(person ⇒ PersonV2(person.name, person.age, person.married))).to[NodeSeq])
-            .map(ns ⇒ ByteString(ns.toString()))
-        )
-      )
-    },
-    Marshaller.withFixedCharset(MediaVersionTypes.`application/vnd.acme.v1+xml`, HttpCharsets.`UTF-8`) { persons ⇒
-      HttpResponse(entity =
-        HttpEntity.CloseDelimited(ContentType(MediaVersionTypes.`application/vnd.acme.v1+xml`, HttpCharsets.`UTF-8`),
-          Source(Marshal(persons.map(person ⇒ PersonV1(person.name, person.age))).to[NodeSeq])
-            .map(ns ⇒ ByteString(ns.toString()))
-        )
-      )
-    },
-    Marshaller.withFixedCharset(MediaVersionTypes.`application/vnd.acme.v2+xml`, HttpCharsets.`UTF-8`) { persons ⇒
-      HttpResponse(entity =
-        HttpEntity.CloseDelimited(ContentType(MediaVersionTypes.`application/vnd.acme.v2+xml`, HttpCharsets.`UTF-8`),
-          Source(Marshal(persons.map(person ⇒ PersonV2(person.name, person.age, person.married))).to[NodeSeq])
-            .map(ns ⇒ ByteString(ns.toString()))
-        )
-      )
-    }
+    } //,
+  //    Marshaller.withFixedContentType(MediaTypes.`application/xml`) { persons ⇒
+  //      HttpResponse(entity =
+  //        HttpEntity.CloseDelimited(ContentType(MediaTypes.`application/xml`),
+  //          Source(Marshal(persons.map(person ⇒ PersonV2(person.name, person.age, person.married))).to[NodeSeq])
+  //            .map(ns ⇒ ByteString(ns.toString))
+  //        )
+  //      )
+  //    },
+  //    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v1+xml`) { persons ⇒
+  //      HttpResponse(entity =
+  //        HttpEntity.CloseDelimited(ContentType(MediaVersionTypes.`application/vnd.acme.v1+xml`),
+  //          Source(Marshal(persons.map(person ⇒ PersonV1(person.name, person.age))).to[NodeSeq])
+  //            .map(ns ⇒ ByteString(ns.toString))
+  //        )
+  //      )
+  //    },
+  //    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v2+xml`) { persons ⇒
+  //      HttpResponse(entity =
+  //        HttpEntity.CloseDelimited(ContentType(MediaVersionTypes.`application/vnd.acme.v2+xml`),
+  //          Source(Marshal(persons.map(person ⇒ PersonV2(person.name, person.age, person.married))).to[NodeSeq])
+  //            .map(ns ⇒ ByteString(ns.toString()))
+  //        )
+  //      )
+  //    }
   )
 
   /**
@@ -141,45 +142,45 @@ trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXm
    * communicate with the VO in the API
    */
   implicit def personMarshaller: ToResponseMarshaller[Person] = Marshaller.oneOf(
-    Marshaller.withFixedCharset(MediaTypes.`application/json`, HttpCharsets.`UTF-8`) { person ⇒
+    Marshaller.withFixedContentType(MediaTypes.`application/json`) { person ⇒
       HttpResponse(entity =
-        HttpEntity(ContentType(MediaTypes.`application/json`, HttpCharsets.`UTF-8`), PersonV2(person.name, person.age, person.married).toJson.compactPrint)
+        HttpEntity(ContentType(MediaTypes.`application/json`), PersonV2(person.name, person.age, person.married).toJson.compactPrint)
       )
     },
-    Marshaller.withFixedCharset(MediaVersionTypes.`application/vnd.acme.v1+json`, HttpCharsets.`UTF-8`) { person ⇒
+    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v1+json`) { person ⇒
       HttpResponse(entity =
-        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v1+json`, HttpCharsets.`UTF-8`), PersonV1(person.name, person.age).toJson.compactPrint)
+        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v1+json`), PersonV1(person.name, person.age).toJson.compactPrint)
       )
     },
-    Marshaller.withFixedCharset(MediaVersionTypes.`application/vnd.acme.v2+json`, HttpCharsets.`UTF-8`) { person ⇒
+    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v2+json`) { person ⇒
       HttpResponse(entity =
-        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v2+json`, HttpCharsets.`UTF-8`), PersonV2(person.name, person.age, person.married).toJson.compactPrint)
+        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v2+json`), PersonV2(person.name, person.age, person.married).toJson.compactPrint)
       )
-    },
-    Marshaller.withFixedCharset(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`) { person ⇒
-      HttpResponse(entity =
-        HttpEntity.CloseDelimited(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`),
-          Source(Marshal(PersonV2(person.name, person.age, person.married)).to[NodeSeq])
-            .map(ns ⇒ ByteString(ns.toString()))
-        )
-      )
-    },
-    Marshaller.withFixedCharset(MediaVersionTypes.`application/vnd.acme.v1+xml`, HttpCharsets.`UTF-8`) { person ⇒
-      HttpResponse(entity =
-        HttpEntity.CloseDelimited(ContentType(MediaVersionTypes.`application/vnd.acme.v1+xml`, HttpCharsets.`UTF-8`),
-          Source(Marshal(PersonV1(person.name, person.age)).to[NodeSeq])
-            .map(ns ⇒ ByteString(ns.toString()))
-        )
-      )
-    },
-    Marshaller.withFixedCharset(MediaVersionTypes.`application/vnd.acme.v2+xml`, HttpCharsets.`UTF-8`) { person ⇒
-      HttpResponse(entity =
-        HttpEntity.CloseDelimited(ContentType(MediaVersionTypes.`application/vnd.acme.v2+xml`, HttpCharsets.`UTF-8`),
-          Source(Marshal(PersonV2(person.name, person.age, person.married)).to[NodeSeq])
-            .map(ns ⇒ ByteString(ns.toString()))
-        )
-      )
-    }
+    } //,
+  //    Marshaller.withFixedContentType(MediaTypes.`application/xml`) { person ⇒
+  //      HttpResponse(entity =
+  //        HttpEntity.CloseDelimited(ContentType(MediaTypes.`application/xml`),
+  //          Source(Marshal(PersonV2(person.name, person.age, person.married)).to[NodeSeq])
+  //            .map(ns ⇒ ByteString(ns.toString()))
+  //        )
+  //      )
+  //    },
+  //    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v1+xml`) { person ⇒
+  //      HttpResponse(entity =
+  //        HttpEntity.CloseDelimited(ContentType(MediaVersionTypes.`application/vnd.acme.v1+xml`),
+  //          Source(Marshal(PersonV1(person.name, person.age)).to[NodeSeq])
+  //            .map(ns ⇒ ByteString(ns.toString()))
+  //        )
+  //      )
+  //    },
+  //    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v2+xml`) { person ⇒
+  //      HttpResponse(entity =
+  //        HttpEntity.CloseDelimited(ContentType(MediaVersionTypes.`application/vnd.acme.v2+xml`),
+  //          Source(Marshal(PersonV2(person.name, person.age, person.married)).to[NodeSeq])
+  //            .map(ns ⇒ ByteString(ns.toString()))
+  //        )
+  //      )
+  //    }
   )
 
   // curl -X POST -H "Content-Type: application/xml" -d '<person><name>John Doe</name><age>25</age><married>true</married></person>' localhost:8080/person

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Dennis Vriend
+ * Copyright 2016 Dennis Vriend
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.github.dnvriend.webservices.eetnu
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.{ HttpRequest, HttpResponse }
@@ -70,21 +71,21 @@ trait Marshallers extends DefaultJsonProtocol {
 trait EetNuClient {
   def venuesByZipcode(zipcode: String): Future[List[Venue]]
 
-  def venuesByZipcode[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(String, T), (List[Venue], T), Unit]
+  def venuesByZipcode[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(String, T), (List[Venue], T), NotUsed]
 
   def venuesByGeo(lat: String, lon: String): Future[List[Venue]]
 
-  def venuesByGeo[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(LatLon, T), (List[Venue], T), Unit]
+  def venuesByGeo[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(LatLon, T), (List[Venue], T), NotUsed]
 
   def venuesByQuery(query: String): Future[List[Venue]]
 
   def venueById(id: String): Future[Option[Venue]]
 
-  def venueById[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(String, T), (Option[Venue], T), Unit]
+  def venueById[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(String, T), (Option[Venue], T), NotUsed]
 
   def reviewsByVenueId(id: String): Future[List[Review]]
 
-  def reviewsByVenueId[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(String, T), (List[Review], T), Unit]
+  def reviewsByVenueId[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(String, T), (List[Review], T), NotUsed]
 }
 
 /**
@@ -107,13 +108,13 @@ object EetNuClient {
   def asVenues(json: String)(implicit reader: JsonReader[Venues]): Venues =
     json.parseJson.convertTo[Venues]
 
-  def asVenuesFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[Venues]): Flow[(Try[HttpResponse], T), (Option[Venues], T), Unit] =
+  def asVenuesFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[Venues]): Flow[(Try[HttpResponse], T), (Option[Venues], T), NotUsed] =
     HttpClient.responseToString[T].map { case (json, id) ⇒ (Try(json.parseJson.convertTo[Venues]).toOption, id) }
 
-  def asVenueFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(Option[Venues], T), (List[Venue], T), Unit] =
+  def asVenueFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(Option[Venues], T), (List[Venue], T), NotUsed] =
     Flow[(Option[Venues], T)].map { case (venues, id) ⇒ (venues.map(_.results).getOrElse(Nil), id) }
 
-  def responseToVenueFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[Venue]): Flow[(Try[HttpResponse], T), (Option[Venue], T), Unit] =
+  def responseToVenueFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[Venue]): Flow[(Try[HttpResponse], T), (Option[Venue], T), NotUsed] =
     HttpClient.responseToString[T].map { case (json, id) ⇒ (Try(json.parseJson.convertTo[Venue]).toOption, id) }
 
   def asVenue(json: String)(implicit reader: JsonReader[Venue]): Option[Venue] =
@@ -124,19 +125,19 @@ object EetNuClient {
 
   def apply()(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, log: LoggingAdapter) = new EetNuClientImpl
 
-  def venuesByQueryRequestFlow[T]: Flow[(String, T), (HttpRequest, T), Unit] =
+  def venuesByQueryRequestFlow[T]: Flow[(String, T), (HttpRequest, T), NotUsed] =
     Flow[(String, T)].map { case (query, id) ⇒ (HttpClient.mkGetRequest("/venues", "", Map("query" -> query)), id) }
 
-  def venueByIdRequestFlow[T]: Flow[(String, T), (HttpRequest, T), Unit] =
+  def venueByIdRequestFlow[T]: Flow[(String, T), (HttpRequest, T), NotUsed] =
     Flow[(String, T)].map { case (vendorId, id) ⇒ (HttpClient.mkGetRequest(s"/venues/$vendorId"), id) }
 
-  def venuesByGeoRequestFlow[T]: Flow[(LatLon, T), (HttpRequest, T), Unit] =
+  def venuesByGeoRequestFlow[T]: Flow[(LatLon, T), (HttpRequest, T), NotUsed] =
     Flow[(LatLon, T)].map { case (LatLon(lat, lon), id) ⇒ (HttpClient.mkGetRequest("/venues", "", Map("geolocation" -> s"$lat,$lon")), id) }
 
-  def reviewsByVenueIdRequestFlow[T]: Flow[(String, T), (HttpRequest, T), Unit] =
+  def reviewsByVenueIdRequestFlow[T]: Flow[(String, T), (HttpRequest, T), NotUsed] =
     Flow[(String, T)].map { case (vendorId, id) ⇒ (HttpClient.mkGetRequest(s"/venues/$vendorId/reviews"), id) }
 
-  def asReviewsFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[Reviews]): Flow[(Try[HttpResponse], T), (List[Review], T), Unit] =
+  def asReviewsFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[Reviews]): Flow[(Try[HttpResponse], T), (List[Review], T), NotUsed] =
     HttpClient.responseToString[T].map { case (json, id) ⇒ (Try(asReviews(json).results).toOption.getOrElse(Nil), id) }
 }
 
@@ -168,7 +169,7 @@ class EetNuClientImpl()(implicit system: ActorSystem, mat: Materializer, ec: Exe
       .flatMap(responseToString)
       .map(asVenue)
 
-  override def venueById[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(String, T), (Option[Venue], T), Unit] =
+  override def venueById[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(String, T), (Option[Venue], T), NotUsed] =
     venueByIdRequestFlow[T]
       .via(client.cachedHostConnectionFlow[T])
       .via(responseToVenueFlow[T])
@@ -179,7 +180,7 @@ class EetNuClientImpl()(implicit system: ActorSystem, mat: Materializer, ec: Exe
       .map(asReviews)
       .map(_.results)
 
-  override def venuesByZipcode[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(String, T), (List[Venue], T), Unit] =
+  override def venuesByZipcode[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(String, T), (List[Venue], T), NotUsed] =
     Flow[(String, T)]
       .map { case (zip, id) ⇒ (normalizeZipcode(zip), id) }
       .collect { case (Some(zip), id) ⇒ (zip, id) } // drop elements that are no valid zipcodes (no use for them)
@@ -188,13 +189,13 @@ class EetNuClientImpl()(implicit system: ActorSystem, mat: Materializer, ec: Exe
       .via(asVenuesFlow[T])
       .via(asVenueFlow[T])
 
-  override def venuesByGeo[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(LatLon, T), (List[Venue], T), Unit] =
+  override def venuesByGeo[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(LatLon, T), (List[Venue], T), NotUsed] =
     venuesByGeoRequestFlow[T]
       .via(client.cachedHostConnectionFlow[T])
       .via(asVenuesFlow[T])
       .via(asVenueFlow[T])
 
-  override def reviewsByVenueId[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(String, T), (List[Review], T), Unit] =
+  override def reviewsByVenueId[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(String, T), (List[Review], T), NotUsed] =
     reviewsByVenueIdRequestFlow[T]
       .via(client.cachedHostConnectionFlow[T])
       .via(asReviewsFlow[T])
