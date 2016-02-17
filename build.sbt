@@ -2,10 +2,11 @@ name := "akka-http-test"
 
 version := "1.0.0"
 
+// see: https://github.com/scala/scala
 scalaVersion := "2.11.7"
 
 libraryDependencies ++= {
-  val akkaVersion = "2.4.2-RC1"
+  val akkaVersion = "2.4.2"
   Seq(
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
@@ -13,9 +14,9 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-http-experimental" % akkaVersion,
     "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaVersion,
     "com.typesafe.akka" %% "akka-http-xml-experimental" % akkaVersion,
-    "com.hunorkovacs" %% "koauth" % "1.1.0",
+    "com.hunorkovacs" %% "koauth" % "1.1.0" exclude("com.typesafe.akka", "akka-actor_2.11"),
     "ch.qos.logback" % "logback-classic" % "1.1.2",
-    "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaVersion % Test,
+    "com.typesafe.akka" %% "akka-http-testkit" % akkaVersion % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,
     "org.scalatest" %% "scalatest" % "2.2.4" % Test
   )
@@ -25,12 +26,7 @@ scalacOptions ++= Seq("-feature", "-language:higherKinds", "-language:implicitCo
 
 licenses +=("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php"))
 
-lazy val root = project
-  .in(file("."))
-  .enablePlugins(AutomateHeaderPlugin)
-
 // enable updating file headers //
-
 import de.heikoseeberger.sbtheader.license.Apache2_0
 import sbt.Keys._
 
@@ -59,5 +55,15 @@ Revolver.settings ++ Seq(
   mainClass in Revolver.reStart := Some("com.github.dnvriend.SimpleServer")
 )
 
-// add clippy as compiler plugin
-addCompilerPlugin("com.softwaremill.clippy" %% "plugin" % "0.1")
+// configure code lint //
+//wartremoverWarnings ++= Seq(Wart.Any, Wart.Serializable)
+wartremoverWarnings ++= Warts.unsafe
+
+// configure build info //
+// build info configuration //
+buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
+
+buildInfoPackage := "com.github.dnvriend"
+
+// enable plugins //
+enablePlugins(AutomateHeaderPlugin, BuildInfoPlugin)

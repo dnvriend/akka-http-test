@@ -34,7 +34,6 @@ trait Service extends Marshallers with GenericServices {
           pathEnd {
             get {
               complete {
-                println("GET")
                 Person("John Doe", 25)
               }
             } ~
@@ -54,5 +53,20 @@ trait Service extends Marshallers with GenericServices {
 }
 
 object SimpleServer extends App with Service with CoreServices {
+  // see: http://patorjk.com/software/taag/#p=testall&h=1&v=2&f=Old%20Banner&t=akka-http-test
+  val banner =
+    s"""
+      |
+      |  ##   #    # #    #   ##         #    # ##### ##### #####        ##### ######  ####  #####
+      | #  #  #   #  #   #   #  #        #    #   #     #   #    #         #   #      #        #
+      |#    # ####   ####   #    # ##### ######   #     #   #    # #####   #   #####   ####    #
+      |###### #  #   #  #   ######       #    #   #     #   #####          #   #           #   #
+      |#    # #   #  #   #  #    #       #    #   #     #   #              #   #      #    #   #
+      |#    # #    # #    # #    #       #    #   #     #   #              #   ######  ####    #
+      |
+      |$BuildInfo
+      |
+    """.stripMargin
+  println(banner)
   Http().bindAndHandle(routes, "0.0.0.0", 8080)
 }

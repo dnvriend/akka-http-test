@@ -76,7 +76,7 @@ class PostcodeClientTest extends TestSpec {
   "PostcodeClient cached connection" should "GetWeatherResult by zip and country" in {
     Source((1 to 10).toStream.map(i ⇒ (GetAddressRequest("1313HX", "33"), i)))
       .via(PostcodeClient().address)
-      .runFold(0) { case (c, e) ⇒ println(e); c + 1 }
+      .runFold(0) { case (c, e) ⇒ c + 1 }
       .futureValue shouldBe 10
   }
 }

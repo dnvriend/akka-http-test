@@ -9,24 +9,24 @@
         </encoder>
     </appender>
 
-    <logger name="akka" level="debug" additivity="false">
-        <appender-ref ref="console"/>
-    </logger>
-
-    <logger name="akka.actor" level="debug" additivity="false">
-        <appender-ref ref="console"/>
-    </logger>
-
-    <logger name="akka.http" level="debug" additivity="false">
-        <appender-ref ref="console"/>
-    </logger>
-
-    <logger name="akka.stream" level="debug" additivity="false">
-        <appender-ref ref="console"/>
-    </logger>
-
-    <root level="debug">
-        <appender-ref ref="console"/>
-    </root>
+    <!--<logger name="akka" level="debug" additivity="false">-->
+        <!--<appender-ref ref="console"/>-->
+    <!--</logger>-->
+<!---->
+    <!--<logger name="akka.actor" level="debug" additivity="false">-->
+        <!--<appender-ref ref="console"/>-->
+    <!--</logger>-->
+<!---->
+    <!--<logger name="akka.http" level="debug" additivity="false">-->
+        <!--<appender-ref ref="console"/>-->
+    <!--</logger>-->
+<!---->
+    <!--<logger name="akka.stream" level="debug" additivity="false">-->
+        <!--<appender-ref ref="console"/>-->
+    <!--</logger>-->
+<!---->
+    <!--<root level="WARN">-->
+        <!--<appender-ref ref="console"/>-->
+    <!--</root>-->
 
 </configuration>

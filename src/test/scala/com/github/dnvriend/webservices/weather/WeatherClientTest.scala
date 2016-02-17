@@ -41,7 +41,8 @@ class WeatherClientTest extends TestSpec with Marshallers {
   }
 
   "Weatherclient" should "get weather result" in {
-    OpenWeatherApi().getWeather("1313", "nl").futureValue.value mustBe {
+    println(OpenWeatherApi().getWeather("1313", "nl").futureValue)
+    OpenWeatherApi().getWeather("1313", "nl").futureValue.value should matchPattern {
       case WeatherResult(_, Sys(_, "NL", _, _), _, _, _, _, _, _, _, "Almere Stad", _) ⇒
     }
   }
@@ -49,7 +50,7 @@ class WeatherClientTest extends TestSpec with Marshallers {
   "OpenWeatherApi cached connection" should "GetWeatherResult by zip and country" in {
     Source((1 to 50).map(i ⇒ (GetWeatherRequest("1313", "nl"), i)))
       .via(OpenWeatherApi().getWeather)
-      .runFold(0) { case (c, e) ⇒ println(e); c + 1 }
+      .runFold(0) { case (c, e) ⇒ c + 1 }
       .futureValue shouldBe 50
   }
 }
