@@ -126,13 +126,13 @@ object EetNuClient {
   def apply()(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, log: LoggingAdapter) = new EetNuClientImpl
 
   def venuesByQueryRequestFlow[T]: Flow[(String, T), (HttpRequest, T), NotUsed] =
-    Flow[(String, T)].map { case (query, id) ⇒ (HttpClient.mkGetRequest("/venues", "", Map("query" -> query)), id) }
+    Flow[(String, T)].map { case (query, id) ⇒ (HttpClient.mkGetRequest("/venues", "", Map("query" → query)), id) }
 
   def venueByIdRequestFlow[T]: Flow[(String, T), (HttpRequest, T), NotUsed] =
     Flow[(String, T)].map { case (vendorId, id) ⇒ (HttpClient.mkGetRequest(s"/venues/$vendorId"), id) }
 
   def venuesByGeoRequestFlow[T]: Flow[(LatLon, T), (HttpRequest, T), NotUsed] =
-    Flow[(LatLon, T)].map { case (LatLon(lat, lon), id) ⇒ (HttpClient.mkGetRequest("/venues", "", Map("geolocation" -> s"$lat,$lon")), id) }
+    Flow[(LatLon, T)].map { case (LatLon(lat, lon), id) ⇒ (HttpClient.mkGetRequest("/venues", "", Map("geolocation" → s"$lat,$lon")), id) }
 
   def reviewsByVenueIdRequestFlow[T]: Flow[(String, T), (HttpRequest, T), NotUsed] =
     Flow[(String, T)].map { case (vendorId, id) ⇒ (HttpClient.mkGetRequest(s"/venues/$vendorId/reviews"), id) }
@@ -153,13 +153,13 @@ class EetNuClientImpl()(implicit system: ActorSystem, mat: Materializer, ec: Exe
     }
 
   override def venuesByGeo(lat: String, lon: String): Future[List[Venue]] =
-    client.get("/venues", "", Map("geolocation" -> s"$lat,$lon"))
+    client.get("/venues", "", Map("geolocation" → s"$lat,$lon"))
       .flatMap(responseToString)
       .map(asVenues)
       .map(_.results)
 
   override def venuesByQuery(query: String): Future[List[Venue]] =
-    client.get("/venues", "", Map("query" -> query))
+    client.get("/venues", "", Map("query" → query))
       .flatMap(responseToString)
       .map(asVenues)
       .map(_.results)

@@ -29,7 +29,8 @@ trait CoreServices extends GenericServices {
     case _ ⇒ Supervision.Resume
   }
   implicit val mat: Materializer = ActorMaterializer(
-    ActorMaterializerSettings(system).withSupervisionStrategy(decider))
+    ActorMaterializerSettings(system).withSupervisionStrategy(decider)
+  )
   implicit val ec: ExecutionContext = system.dispatcher
 
   sys.addShutdownHook {

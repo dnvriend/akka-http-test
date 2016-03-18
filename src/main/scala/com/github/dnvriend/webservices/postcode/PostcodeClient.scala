@@ -29,7 +29,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 import scala.util.matching.Regex
 
-case class Address(street: String,
+case class Address(
+  street: String,
   houseNumber: Int,
   houseNumberAddition: String,
   postcode: String,
@@ -45,7 +46,8 @@ case class Address(street: String,
   addressType: String,
   purposes: Option[List[String]],
   surfaceArea: Int,
-  houseNumberAdditions: List[String])
+  houseNumberAdditions: List[String]
+)
 
 trait Marshallers extends DefaultJsonProtocol {
   implicit val addressJsonFormat = jsonFormat17(Address)

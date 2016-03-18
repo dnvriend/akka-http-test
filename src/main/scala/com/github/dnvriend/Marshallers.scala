@@ -98,43 +98,42 @@ trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXm
   implicit def personsMarshaller: ToResponseMarshaller[Iterable[Person]] = Marshaller.oneOf(
     Marshaller.withFixedContentType(MediaTypes.`application/json`) { persons ⇒
       HttpResponse(entity =
-        HttpEntity(ContentType(MediaTypes.`application/json`), persons.map(person ⇒ PersonV2(person.name, person.age, person.married)).toJson.compactPrint)
-      )
+        HttpEntity(ContentType(MediaTypes.`application/json`), persons.map(person ⇒ PersonV2(person.name, person.age, person.married)).toJson.compactPrint))
     },
     Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v1+json`) { persons ⇒
       HttpResponse(entity =
-        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v1+json`), persons.map(person ⇒ PersonV1(person.name, person.age)).toJson.compactPrint)
-      )
+        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v1+json`), persons.map(person ⇒ PersonV1(person.name, person.age)).toJson.compactPrint))
     },
     Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v2+json`) { persons ⇒
       HttpResponse(entity =
-        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v2+json`), persons.map(person ⇒ PersonV2(person.name, person.age, person.married)).toJson.compactPrint)
-      )
+        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v2+json`), persons.map(person ⇒ PersonV2(person.name, person.age, person.married)).toJson.compactPrint))
     },
     Marshaller.withOpenCharset(MediaTypes.`application/xml`) { (persons, charset) ⇒
       HttpResponse(entity =
-        HttpEntity.CloseDelimited(ContentType.WithCharset(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`),
-          Source.fromIterator(() ⇒ persons.iterator).map { person ⇒
+        HttpEntity.CloseDelimited(
+          ContentType.WithCharset(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`),
+          Source.fromIterator(() ⇒ persons.iterator).mapAsync(1) { person ⇒
             Marshal(persons.map(person ⇒ PersonV2(person.name, person.age, person.married))).to[NodeSeq]
           }.map(ns ⇒ ByteString(ns.toString))
-        )
-      )
+        ))
     },
     Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v1+xml`) { persons ⇒
       HttpResponse(entity =
-        HttpEntity.CloseDelimited(ContentType(MediaVersionTypes.`application/vnd.acme.v1+xml`),
-          Source.single(Marshal(persons.map(person ⇒ PersonV1(person.name, person.age))).to[NodeSeq])
-            .map(ns ⇒ ByteString(ns.toString))
-        )
-      )
+        HttpEntity.CloseDelimited(
+          ContentType(MediaVersionTypes.`application/vnd.acme.v1+xml`),
+          Source.fromIterator(() ⇒ persons.iterator).mapAsync(1) { person ⇒
+            Marshal(persons.map(person ⇒ PersonV1(person.name, person.age))).to[NodeSeq]
+          }.map(ns ⇒ ByteString(ns.toString))
+        ))
     },
     Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v2+xml`) { persons ⇒
       HttpResponse(entity =
-        HttpEntity.CloseDelimited(ContentType(MediaVersionTypes.`application/vnd.acme.v2+xml`),
-          Source.single(Marshal(persons.map(person ⇒ PersonV2(person.name, person.age, person.married))).to[NodeSeq])
-            .map(ns ⇒ ByteString(ns.toString))
-        )
-      )
+        HttpEntity.CloseDelimited(
+          ContentType(MediaVersionTypes.`application/vnd.acme.v2+xml`),
+          Source.fromIterator(() ⇒ persons.iterator).mapAsync(1) { person ⇒
+            Marshal(persons.map(person ⇒ PersonV2(person.name, person.age, person.married))).to[NodeSeq]
+          }.map(ns ⇒ ByteString(ns.toString))
+        ))
     }
   )
 
@@ -145,42 +144,39 @@ trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXm
   implicit def personMarshaller: ToResponseMarshaller[Person] = Marshaller.oneOf(
     Marshaller.withFixedContentType(MediaTypes.`application/json`) { person ⇒
       HttpResponse(entity =
-        HttpEntity(ContentType(MediaTypes.`application/json`), PersonV2(person.name, person.age, person.married).toJson.compactPrint)
-      )
+        HttpEntity(ContentType(MediaTypes.`application/json`), PersonV2(person.name, person.age, person.married).toJson.compactPrint))
     },
     Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v1+json`) { person ⇒
       HttpResponse(entity =
-        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v1+json`), PersonV1(person.name, person.age).toJson.compactPrint)
-      )
+        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v1+json`), PersonV1(person.name, person.age).toJson.compactPrint))
     },
     Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v2+json`) { person ⇒
       HttpResponse(entity =
-        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v2+json`), PersonV2(person.name, person.age, person.married).toJson.compactPrint)
-      )
+        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v2+json`), PersonV2(person.name, person.age, person.married).toJson.compactPrint))
     },
     Marshaller.withOpenCharset(MediaTypes.`application/xml`) { (person, charset) ⇒
       HttpResponse(entity =
-        HttpEntity.CloseDelimited(ContentType.WithCharset(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`),
-          Source.single(Marshal(PersonV2(person.name, person.age, person.married)).to[NodeSeq])
+        HttpEntity.CloseDelimited(
+          ContentType.WithCharset(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`),
+          Source.fromFuture(Marshal(PersonV2(person.name, person.age, person.married)).to[NodeSeq])
             .map(ns ⇒ ByteString(ns.toString))
-        )
-      )
+        ))
     },
     Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v1+xml`) { person ⇒
       HttpResponse(entity =
-        HttpEntity.CloseDelimited(ContentType(MediaVersionTypes.`application/vnd.acme.v1+xml`),
-          Source.single(Marshal(PersonV1(person.name, person.age)).to[NodeSeq])
+        HttpEntity.CloseDelimited(
+          ContentType(MediaVersionTypes.`application/vnd.acme.v1+xml`),
+          Source.fromFuture(Marshal(PersonV1(person.name, person.age)).to[NodeSeq])
             .map(ns ⇒ ByteString(ns.toString))
-        )
-      )
+        ))
     },
     Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v2+xml`) { person ⇒
       HttpResponse(entity =
-        HttpEntity.CloseDelimited(ContentType(MediaVersionTypes.`application/vnd.acme.v2+xml`),
-          Source.single(Marshal(PersonV2(person.name, person.age, person.married)).to[NodeSeq])
+        HttpEntity.CloseDelimited(
+          ContentType(MediaVersionTypes.`application/vnd.acme.v2+xml`),
+          Source.fromFuture(Marshal(PersonV2(person.name, person.age, person.married)).to[NodeSeq])
             .map(ns ⇒ ByteString(ns.toString))
-        )
-      )
+        ))
     }
   )
 

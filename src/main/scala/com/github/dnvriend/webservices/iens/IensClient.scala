@@ -72,11 +72,12 @@ object IensClient {
     Flow[(LatLon, T)].map {
       case (LatLon(lat, lon), id) ⇒
         val requestParams = Map(
-          "id" -> "searchrestaurants",
-          "limit" -> "1",
-          "offset" -> "0",
-          "latitude" -> lat.toString,
-          "longitude" -> lon.toString)
+          "id" → "searchrestaurants",
+          "limit" → "1",
+          "offset" → "0",
+          "latitude" → lat.toString,
+          "longitude" → lon.toString
+        )
         (HttpClient.mkGetRequest("/rest/restaurant", "", requestParams), id)
     }
 
@@ -87,7 +88,7 @@ object IensClient {
 
   def restaurantDetailsRequestFlow[T]: Flow[(Long, T), (HttpRequest, T), NotUsed] =
     Flow[(Long, T)].map {
-      case (vendorId, id) ⇒ (HttpClient.mkGetRequest("/rest/restaurant", queryParamsMap = Map("id" -> "getrestaurantdetails", "restaurant_id" -> vendorId.toString)), id)
+      case (vendorId, id) ⇒ (HttpClient.mkGetRequest("/rest/restaurant", queryParamsMap = Map("id" → "getrestaurantdetails", "restaurant_id" → vendorId.toString)), id)
     }
 
   def asGetRestaurantDetailsResponseFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[GetRestaurantDetailsResponse]): Flow[(Try[HttpResponse], T), (Try[GetRestaurantDetailsResponse], T), NotUsed] =
@@ -97,7 +98,7 @@ object IensClient {
 
   def reviewsRequestFlow[T]: Flow[(Long, T), (HttpRequest, T), NotUsed] =
     Flow[(Long, T)].map {
-      case (vendorId, id) ⇒ (HttpClient.mkGetRequest("/rest/review", queryParamsMap = Map("restaurant_id" -> id.toString)), id)
+      case (vendorId, id) ⇒ (HttpClient.mkGetRequest("/rest/review", queryParamsMap = Map("restaurant_id" → id.toString)), id)
     }
 
   def asGetReviewResponseFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[GetReviewResponse]): Flow[(Try[HttpResponse], T), (Try[GetReviewResponse], T), NotUsed] =
@@ -127,11 +128,12 @@ class IensClientImpl()(implicit val system: ActorSystem, val mat: Materializer, 
 
   override def restaurantsByGeo(langitude: Double, longitude: Double, limit: Int, offset: Int): Future[SearchRestaurantsResponse] = {
     client.get("/rest/restaurant", queryParamsMap = Map(
-      "id" -> "searchrestaurants",
-      "limit" -> limit.toString,
-      "offset" -> offset.toString,
-      "latitude" -> langitude.toString,
-      "longitude" -> longitude.toString))
+      "id" → "searchrestaurants",
+      "limit" → limit.toString,
+      "offset" → offset.toString,
+      "latitude" → langitude.toString,
+      "longitude" → longitude.toString
+    ))
       .flatMap(responseToString)
       .map(asSearchRestaurantsResponse)
   }
@@ -142,7 +144,7 @@ class IensClientImpl()(implicit val system: ActorSystem, val mat: Materializer, 
       .via(asSearchRestaurantsResponseFlow[T])
 
   override def restaurantDetails(id: Long): Future[GetRestaurantDetailsResponse] = {
-    client.get("/rest/restaurant", queryParamsMap = Map("id" -> "getrestaurantdetails", "restaurant_id" -> id.toString))
+    client.get("/rest/restaurant", queryParamsMap = Map("id" → "getrestaurantdetails", "restaurant_id" → id.toString))
       .flatMap(responseToString)
       .map(asGetRestaurantDetailsResponse)
   }
@@ -153,7 +155,7 @@ class IensClientImpl()(implicit val system: ActorSystem, val mat: Materializer, 
       .via(asGetRestaurantDetailsResponseFlow[T])
 
   override def reviews(id: Long): Future[GetReviewResponse] =
-    client.get("/rest/review", queryParamsMap = Map("restaurant_id" -> id.toString))
+    client.get("/rest/review", queryParamsMap = Map("restaurant_id" → id.toString))
       .flatMap(responseToString)
       .map(asGetReviewResponse)
 

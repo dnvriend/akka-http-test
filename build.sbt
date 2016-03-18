@@ -2,8 +2,7 @@ name := "akka-http-test"
 
 version := "1.0.0"
 
-// see: https://github.com/scala/scala
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
 libraryDependencies ++= {
   val akkaVersion = "2.4.2"
@@ -11,6 +10,7 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+    "com.typesafe.akka" %% "akka-http-core" % akkaVersion,
     "com.typesafe.akka" %% "akka-http-experimental" % akkaVersion,
     "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaVersion,
     "com.typesafe.akka" %% "akka-http-xml-experimental" % akkaVersion,
@@ -27,8 +27,8 @@ scalacOptions ++= Seq("-feature", "-language:higherKinds", "-language:implicitCo
 licenses +=("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php"))
 
 // enable updating file headers //
+import com.typesafe.sbt.SbtScalariform
 import de.heikoseeberger.sbtheader.license.Apache2_0
-import sbt.Keys._
 
 headers := Map(
   "scala" -> Apache2_0("2016", "Dennis Vriend"),
@@ -36,12 +36,11 @@ headers := Map(
 )
 
 // enable scala code formatting //
-
 import scalariform.formatter.preferences._
+import com.typesafe.sbt.SbtScalariform
 
-scalariformSettings
-
-ScalariformKeys.preferences := ScalariformKeys.preferences.value
+// Scalariform settings
+SbtScalariform.autoImport.scalariformPreferences := SbtScalariform.autoImport.scalariformPreferences.value
   .setPreference(AlignSingleLineCaseStatements, true)
   .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 100)
   .setPreference(DoubleIndentClassDeclaration, true)

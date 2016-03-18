@@ -9,10 +9,10 @@ addSbtPlugin("io.spray" % "sbt-revolver" % "0.7.2")
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.8.0")
 
 // to format scala source code
-addSbtPlugin("com.typesafe.sbt" % "sbt-scalariform" % "1.3.0")
+addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.6.0")
 
 // enable updating file headers eg. for copyright
-addSbtPlugin("de.heikoseeberger" % "sbt-header" % "1.5.0")
+addSbtPlugin("de.heikoseeberger" % "sbt-header" % "1.5.1")
 
 // generates Scala source from your build definitions //
 // see: https://github.com/sbt/sbt-buildinfo

@@ -17,8 +17,10 @@
 package com.github.dnvriend
 
 import akka.http.scaladsl._
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Route
 import com.github.dnvriend.domain.Person
 import com.github.dnvriend.util.TimeUtil
@@ -43,8 +45,13 @@ trait Service extends Marshallers with GenericServices {
                 }
               }
           }
-        } ~
-        pathPrefix("ping") {
+        } ~ pathPrefix("persons") {
+          pathEnd {
+            complete {
+              Seq(Person("John Doe", 25), Person("Foo Bar", 30))
+            }
+          }
+        } ~ pathPrefix("ping") {
           complete {
             Ping(TimeUtil.timestamp)
           }
