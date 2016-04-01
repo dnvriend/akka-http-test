@@ -31,10 +31,10 @@ class HttpClientTest extends TestSpec {
   }
 
   it should "create a query string from simple entries" in {
-    HttpClient.queryString(Map("a" -> "b", "c" -> "d")) shouldBe "?a=b&c=d"
-    HttpClient.queryString(Map("a" -> "b c", "d" -> "e f")) shouldBe "?a=b+c&d=e+f"
-    HttpClient.queryString(Map("a" -> "", "c" -> "")) shouldBe "?a=&c="
-    HttpClient.queryString(Map("" -> "", "" -> "")) shouldBe "?"
+    HttpClient.queryString(Map("a" → "b", "c" → "d")) shouldBe "?a=b&c=d"
+    HttpClient.queryString(Map("a" → "b c", "d" → "e f")) shouldBe "?a=b+c&d=e+f"
+    HttpClient.queryString(Map("a" → "", "c" → "")) shouldBe "?a=&c="
+    HttpClient.queryString(Map("" → "", "" → "")) shouldBe "?"
   }
 
   "HttpClient.header" should "create a single http header" in {
@@ -44,7 +44,7 @@ class HttpClientTest extends TestSpec {
   }
 
   it should "create a List[HttpHeader] from a Map[String, String]" in {
-    HttpClient.headers(Map("foo" -> "bar", "bar" -> "baz")).sortBy(_.name()) mustBe {
+    HttpClient.headers(Map("foo" → "bar", "bar" → "baz")).sortBy(_.name()) mustBe {
       case List(HttpHeader("bar", "baz"), HttpHeader("foo", "bar")) ⇒
     }
   }

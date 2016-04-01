@@ -53,7 +53,7 @@ class IensConnectionTest extends TestSpec {
     //     note that the KoauthRequest object needs the whole URL so for Iens that will be https://www.iens.nl/rest/review/?restaurant_id=22630
     //     and must be refreshed for each request, so when you wish another resource or ID, you will need to update the URL also.
     (1 to 2).foreach { i ⇒
-      val response = iensHttpClient.get(url, "", Map.empty, Map("Authorization" -> oAuthHeader(url).futureValue.header)).futureValue
+      val response = iensHttpClient.get(url, "", Map.empty, Map("Authorization" → oAuthHeader(url).futureValue.header)).futureValue
       response.status shouldBe StatusCodes.OK
     }
   }
@@ -74,19 +74,19 @@ class IensConnectionTest extends TestSpec {
 
   "find by geo" should "return a list of restaurants" in {
     val iens = HttpClient("iens")
-    iens.get("/rest/restaurant", "", Map("id" -> "searchrestaurants", "latitude" -> "52.166083", "longitude" -> "4.518241"))
+    iens.get("/rest/restaurant", "", Map("id" → "searchrestaurants", "latitude" → "52.166083", "longitude" → "4.518241"))
       .flatMap(resp ⇒ HttpClient.responseToString(resp)).futureValue.size should not be 0
   }
 
   "get restaurant by id" should "return restaurant" in {
     val iens = HttpClient("iens")
-    iens.get("/rest/restaurant", "", Map("id" -> "getrestaurantdetails", "restaurant_id" -> "23091"))
+    iens.get("/rest/restaurant", "", Map("id" → "getrestaurantdetails", "restaurant_id" → "23091"))
       .flatMap(resp ⇒ HttpClient.responseToString(resp)).futureValue.size should not be 0
   }
 
   "get reviews by id" should "return reviews" in {
     val iens = HttpClient("iens")
-    iens.get("/rest/review", "", Map("restaurant_id" -> "23091"))
+    iens.get("/rest/review", "", Map("restaurant_id" → "23091"))
       .flatMap(resp ⇒ HttpClient.responseToString(resp)).futureValue.size should not be 0
   }
 }
