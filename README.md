@@ -194,7 +194,7 @@ implicit val personMarshaller = Marshaller.oneOf[Person, NodeSeq](opaquePersonMa
 
 # Vendor specific media types
 Versioning an API can be tricky. The key is choosing a strategy on how to do versioning. I have found and tried the following stragegies as
-blogged by [Jim Lidell's blog](http://liddellj.com/using-media-type-parameters-to-version-an-http-api/), which is great by the way!
+blogged by [Jim Liddell's blog](https://web.archive.org/web/20151001093016/http://liddellj.com/using-media-type-parameters-to-version-an-http-api/), which is great by the way!
 
 1. 'The URL is king' in which the URL is encoded in the URL eg. `http://localhost:8080/api/v1/person`. The downside of this strategy is that
 the location of a resource may not change, and when we request another representation, the url does change eg. to `http://localhost:8080/api/v2/person`.
