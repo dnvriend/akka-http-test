@@ -96,21 +96,19 @@ object HttpClient {
   //
   //  -> http://stackoverflow.com/questions/31929843/query-parameters-for-get-requests-using-akka-http-formally-known-as-spray#answer-31939776
   //
-  /**
-   * * disabled
-   * def queryString(queryParams: Map[String, String]): String =
-   * if (queryParams.nonEmpty)
-   * "?" + queryParams
-   * .filterNot {
-   * case (key, value) ⇒ key.length == 0
-   * }.mapValues(encode)
-   * .toList
-   * .map {
-   * case (key, value) ⇒ s"$key=$value"
-   * }.mkString("&")
-   * else ""
-   * *
-   */
+  /*** disabled
+  def queryString(queryParams: Map[String, String]): String =
+    if (queryParams.nonEmpty)
+      "?" + queryParams
+        .filterNot {
+          case (key, value) ⇒ key.length == 0
+        }.mapValues(encode)
+        .toList
+        .map {
+          case (key, value) ⇒ s"$key=$value"
+        }.mkString("&")
+    else ""
+  ***/
 
   def header(key: String, value: String): Option[HttpHeader] =
     HttpHeader.parse(key, value) match {
