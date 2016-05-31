@@ -6,9 +6,11 @@ resolvers += "bintray-sbt-plugin-releases" at "http://dl.bintray.com/content/sbt
 // see: https://github.com/spray/sbt-revolver
 addSbtPlugin("io.spray" % "sbt-revolver" % "0.8.0")
 
+// This caused problems for me, so disabled it. 0.7.5 works on my system. AKa300516
+//
 // to show a dependency graph
 // see: https://github.com/jrudolph/sbt-dependency-graph
-addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.8.2")
+//addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.8.2")
 
 // to format scala source code
 addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.6.0")

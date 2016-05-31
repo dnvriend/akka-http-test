@@ -24,6 +24,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model.HttpHeader.ParsingResult
+import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
@@ -90,17 +91,26 @@ object HttpClient {
       case (Success(resp), e) ⇒ responseToString(resp).map(str ⇒ (str, e))
     }
 
-  def queryString(queryParams: Map[String, String]): String =
-    if (queryParams.nonEmpty)
-      "?" + queryParams
-        .filterNot {
-          case (key, value) ⇒ key.length == 0
-        }.mapValues(encode)
-        .toList
-        .map {
-          case (key, value) ⇒ s"$key=$value"
-        }.mkString("&")
-    else ""
+  // Since the project is exemplary and no doubt many people will copy-paste from it (myself included!), it would
+  // be nice to point to '.withQuery' as the akka-http way of providing query parameters:
+  //
+  //  -> http://stackoverflow.com/questions/31929843/query-parameters-for-get-requests-using-akka-http-formally-known-as-spray#answer-31939776
+  //
+  /**
+   * * disabled
+   * def queryString(queryParams: Map[String, String]): String =
+   * if (queryParams.nonEmpty)
+   * "?" + queryParams
+   * .filterNot {
+   * case (key, value) ⇒ key.length == 0
+   * }.mapValues(encode)
+   * .toList
+   * .map {
+   * case (key, value) ⇒ s"$key=$value"
+   * }.mkString("&")
+   * else ""
+   * *
+   */
 
   def header(key: String, value: String): Option[HttpHeader] =
     HttpHeader.parse(key, value) match {
@@ -185,8 +195,12 @@ object HttpClient {
 
   def mkEntity(body: String): HttpEntity.Strict = HttpEntity(ContentTypes.`application/json`, body)
 
-  def mkRequest(requestBuilder: RequestBuilding#RequestBuilder, url: String, body: String = "", queryParamsMap: Map[String, String] = Map.empty, headersMap: Map[String, String] = Map.empty) =
-    requestBuilder(url + queryString(queryParamsMap), mkEntity(body)).addHeaders(headers(headersMap))
+  // Disabled
+  //def mkRequest(requestBuilder: RequestBuilding#RequestBuilder, url: String, body: String = "", queryParamsMap: Map[String, String] = Map.empty, headersMap: Map[String, String] = Map.empty) =
+  //  requestBuilder(url + queryString(queryParamsMap), mkEntity(body)).addHeaders(headers(headersMap))
+
+  def mkRequest(requestBuilder: RequestBuilding#RequestBuilder, url: String, body: String = "", queryParamsMap: Map[String, String] = Map.empty, headersMap: Map[String, String] = Map.empty): HttpRequest =
+    requestBuilder(Uri(url).withQuery(Query(queryParamsMap)), mkEntity(body)).addHeaders(headers(headersMap))
 
   def mkGetRequest(url: String, body: String = "", queryParamsMap: Map[String, String] = Map.empty, headersMap: Map[String, String] = Map.empty) =
     mkRequest(RequestBuilding.Get, url, body, queryParamsMap, headersMap)

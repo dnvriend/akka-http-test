@@ -8,23 +8,28 @@ source code for correct usage.
 # Dependencies
 To use akka-http we need the following dependencies:
 
+<!-- not in build.sbt AKa300516
 * `reactive-streams`:
   * Provides the new abstraction for async and non-blocking pipeline processing,
   * It has automatic support for back-pressure,
   * Standardized API it's called: [reactive-streams.org](http://www.reactive-streams.org) and as of May 2015 is v1.0,
-* `akka-stream-experimental`:   
+-->
+* `akka-stream`:
   * Provided a standard API and DSL for creating composable stream transformations based upon the [reactive-streams.org](http://www.reactive-streams.org) standard.
-* `akka-http-core-experimental`:
+* `akka-http-core`:
   * Sits on top of `akka-io`,
   * Performs TCP <-> HTTP translation,
   * Cleanly separated layer of stream transformations provided by Akka Extension,
   * Implements HTTP 'essentials', no higher-level features (like file serving)
-* `akka-http-scala-experimental`:
+* `akka-http-experimental`:
   * Provides higher-level server- and client-side APIs
   * 'Unmarshalling' custom types from HttpEntities,
   * 'Marshalling' custom types to HttpEntities
   * (De)compression (GZip / Deflate),
   * Routing DSL
+<!-- I think unmarshalling is now (2.4.6) in `akka-http-core`, though some documentation may
+    still be saying otherwise. AKa300516
+-->
 * `akka-http-spray-json-experimental:`:
   * Provides spray-json support
 
@@ -63,6 +68,9 @@ First some Akka Stream parley:
 * `Flow`: a processing stage with exactly one input and output, which connects its up- and downstream by moving/transforming the data elements flowing through it,
 * `Runnable flow`: A flow that has both ends attached to a `Source` and `Sink` respectively,
 * `Materialized flow`: An instantiation / incarnation / materialization of the abstract processing-flow template. 
+<!-- You might want to say that the materialized flow actually creates the actors doing the work. At least to me,
+that was an "aha" on what it really means. AKa300516
+-->
 
 The abstractions above (Flow, Source, Sink, Processing stage) are used to create a processing-stream `template` or `blueprint`. When the template has a `Source` connected to a `Sink` with optionally some `processing stages` between them, such a `template` is called a `Runnable Flow`. 
 
@@ -111,6 +119,19 @@ def routes: Flow[HttpRequest, HttpResponse, Unit] =
 
 # Spray-Json
 I'm glad to see that `akka-http-spray-json-experimental` basically has the same API as spray:
+<!--
+Hmm.. has it?
+
+Did spray have `Marshall` and `Unmarshall`. Maybe, I'm not sure, but I don't recall them.
+
+As to most of your sample below, they are just `spray-json` and `akka-http-spray-json-experimental` depends
+on spray-json now, and in the future. It's a separate library from spray, so there's no intention to replace
+it. Which is brilliant. AKa300516
+
+[info]   +-com.typesafe.akka:akka-http-spray-json-experimental_2.11:2.4.6 [S]
+  ...
+[info]   | +-io.spray:spray-json_2.11:1.3.2 [S]
+-->
 
 ```scala
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
@@ -195,6 +216,12 @@ implicit val personMarshaller = Marshaller.oneOf[Person, NodeSeq](opaquePersonMa
 # Vendor specific media types
 Versioning an API can be tricky. The key is choosing a strategy on how to do versioning. I have found and tried the following stragegies as
 blogged by [Jim Lidell's blog](http://liddellj.com/using-media-type-parameters-to-version-an-http-api/), which is great by the way!
+<!-- The blog link is dead. Asked him on twitter what to do. AKa310516 -->
+
+<!-- The 1,2 below feels a bit exhausting and out-of-place, until 3 brings it back to relevance. You could make them
+shorter, simply stating that instead of those it's generally deemed better to use MIME types for versioning, and this
+is how it's done in akka-http. Keeps things more focused and brief (e.g. I knew the 1-2-3 logic, so reading this was
+not adding value. AKa310516 -->
 
 1. 'The URL is king' in which the URL is encoded in the URL eg. `http://localhost:8080/api/v1/person`. The downside of this strategy is that
 the location of a resource may not change, and when we request another representation, the url does change eg. to `http://localhost:8080/api/v2/person`.
@@ -202,7 +229,7 @@ the location of a resource may not change, and when we request another represent
 must be as lean as possible, and the only exception is for filtering, sorting, searching and paging, as stated by [Vinay Sahni](http://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api)
 in his great blog 'Best Practices for Designing a Pragmatic RESTful API'.
 3. Both bloggers and I agree that using request headers for versioning, and therefor relying on vendor specific media types is a great way to keep the
-resource urls clean, the location does not change and in code the versioning is only a presentation responsibility, easilly resolved by an
+resource urls clean, the location does not change and in code the versioning is only a presentation responsibility, easily resolved by an
 in scope mashaller.
 
 When you run the example, you can try the following requests:

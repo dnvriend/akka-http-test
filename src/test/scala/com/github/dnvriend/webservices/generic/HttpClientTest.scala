@@ -26,16 +26,20 @@ class HttpClientTest extends TestSpec {
     HttpClient.encode("abcde abcde") shouldBe "abcde+abcde"
   }
 
-  "HttpClient.queryString" should "create a query string from an empty map" in {
-    HttpClient.queryString(Map.empty) shouldBe ""
-  }
-
-  it should "create a query string from simple entries" in {
-    HttpClient.queryString(Map("a" → "b", "c" → "d")) shouldBe "?a=b&c=d"
-    HttpClient.queryString(Map("a" → "b c", "d" → "e f")) shouldBe "?a=b+c&d=e+f"
-    HttpClient.queryString(Map("a" → "", "c" → "")) shouldBe "?a=&c="
-    HttpClient.queryString(Map("" → "", "" → "")) shouldBe "?"
-  }
+  /**
+   * * disabled
+   * "HttpClient.queryString" should "create a query string from an empty map" in {
+   * HttpClient.queryString(Map.empty) shouldBe ""
+   * }
+   *
+   * it should "create a query string from simple entries" in {
+   * HttpClient.queryString(Map("a" → "b", "c" → "d")) shouldBe "?a=b&c=d"
+   * HttpClient.queryString(Map("a" → "b c", "d" → "e f")) shouldBe "?a=b+c&d=e+f"
+   * HttpClient.queryString(Map("a" → "", "c" → "")) shouldBe "?a=&c="
+   * HttpClient.queryString(Map("" → "", "" → "")) shouldBe "?"
+   * }
+   * *
+   */
 
   "HttpClient.header" should "create a single http header" in {
     HttpClient.header("foo", "bar").value mustBe {
