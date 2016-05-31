@@ -193,10 +193,6 @@ object HttpClient {
 
   def mkEntity(body: String): HttpEntity.Strict = HttpEntity(ContentTypes.`application/json`, body)
 
-  // Disabled
-  //def mkRequest(requestBuilder: RequestBuilding#RequestBuilder, url: String, body: String = "", queryParamsMap: Map[String, String] = Map.empty, headersMap: Map[String, String] = Map.empty) =
-  //  requestBuilder(url + queryString(queryParamsMap), mkEntity(body)).addHeaders(headers(headersMap))
-
   def mkRequest(requestBuilder: RequestBuilding#RequestBuilder, url: String, body: String = "", queryParamsMap: Map[String, String] = Map.empty, headersMap: Map[String, String] = Map.empty): HttpRequest =
     requestBuilder(Uri(url).withQuery(Query(queryParamsMap)), mkEntity(body)).addHeaders(headers(headersMap))
 
