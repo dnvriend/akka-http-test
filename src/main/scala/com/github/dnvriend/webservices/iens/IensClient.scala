@@ -59,6 +59,10 @@ object IensClient {
   def responseToString(resp: HttpResponse)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Future[String] =
     HttpClient.responseToString(resp)
 
+  <!-- Having these 'json.parseJson.convertTo' make me thing akka-http unmarshalling should be able to do this. I.e.
+      instead use a type parameter when getting things out of the http pipeline. I can help you find the right changes,
+      if you're interested, but leaving them out of this initial PR. :) AKa310516
+  -->
   def asSearchRestaurantsResponse(json: String)(implicit reader: JsonReader[SearchRestaurantsResponse]): SearchRestaurantsResponse =
     json.parseJson.convertTo[SearchRestaurantsResponse]
 

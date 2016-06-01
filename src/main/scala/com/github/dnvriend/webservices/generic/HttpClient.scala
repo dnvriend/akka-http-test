@@ -27,15 +27,15 @@ import akka.http.scaladsl.model.HttpHeader.ParsingResult
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, FromResponseUnmarshaller, Unmarshal}
 import akka.stream.Materializer
-import akka.stream.scaladsl.{ Flow, Sink, Source }
+import akka.stream.scaladsl.{Flow, Sink, Source}
 import com.hunorkovacs.koauth.domain.KoauthRequest
-import com.hunorkovacs.koauth.service.consumer.{ DefaultConsumerService, RequestWithInfo }
+import com.hunorkovacs.koauth.service.consumer.{DefaultConsumerService, RequestWithInfo}
 import com.typesafe.config.Config
 
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Failure, Success, Try }
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 object HttpClientConfig {
   def apply(config: Config): HttpClientConfig =
@@ -79,13 +79,17 @@ object HttpClient {
    */
   def encode(value: String): String = URLEncoder.encode(value, "UTF-8")
 
-  def responseToString(response: HttpResponse)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Future[String] = response.status match {
+  def responseToString(response: HttpResponse)(implicit /*system: ActorSystem,*/ mat: Materializer, ec: ExecutionContext): Future[String] = response.status match {
     //    case StatusCodes.OK       ⇒ Unmarshal(response.entity).to[String]
     //    case StatusCodes.NotFound ⇒ Unmarshal(response.entity).to[String]
     case status ⇒ Unmarshal(response.entity).to[String]
   }
 
-  def responseToString[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(Try[HttpResponse], T), (String, T), NotUsed] =
+  def responseTo[T : FromEntityUnmarshaller](response: HttpResponse)(implicit mat: Materializer, ec: ExecutionContext): Future[T] = {
+    Unmarshal(response.entity).to[T]
+  }
+
+  def responseToString[T](implicit /*system: ActorSystem,*/ mat: Materializer, ec: ExecutionContext): Flow[(Try[HttpResponse], T), (String, T), NotUsed] =
     Flow[(Try[HttpResponse], T)].mapAsync(1) {
       case (Failure(t), e)    ⇒ Future.failed(t)
       case (Success(resp), e) ⇒ responseToString(resp).map(str ⇒ (str, e))
