@@ -5,7 +5,7 @@ version := "1.0.0"
 scalaVersion := "2.11.8"
 
 libraryDependencies ++= {
-  val akkaVersion = "2.4.7"
+  val akkaVersion = "2.4.8"
   Seq(
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
@@ -15,7 +15,7 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaVersion,
     "com.typesafe.akka" %% "akka-http-xml-experimental" % akkaVersion,
     "com.hunorkovacs" %% "koauth" % "1.1.0" exclude("com.typesafe.akka", "akka-actor_2.11"),
-    "ch.qos.logback" % "logback-classic" % "1.1.2",
+    "ch.qos.logback" % "logback-classic" % "1.1.7",
     "com.typesafe.akka" %% "akka-http-testkit" % akkaVersion % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,
     "org.scalatest" %% "scalatest" % "2.2.6" % Test
@@ -52,15 +52,5 @@ Revolver.settings ++ Seq(
   mainClass in reStart := Some("com.github.dnvriend.SimpleServer")
 )
 
-// configure code lint //
-//wartremoverWarnings ++= Seq(Wart.Any, Wart.Serializable)
-wartremoverWarnings ++= Warts.unsafe
-
-// configure build info //
-// build info configuration //
-buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
-
-buildInfoPackage := "com.github.dnvriend"
-
 // enable plugins //
-enablePlugins(AutomateHeaderPlugin, BuildInfoPlugin)
+enablePlugins(AutomateHeaderPlugin)

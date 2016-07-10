@@ -17,15 +17,25 @@
 package com.github.dnvriend
 
 import akka.http.scaladsl._
-import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.server.Route
+import akka.stream.scaladsl.{ Concat, Source }
+import akka.util.ByteString
 import com.github.dnvriend.domain.Person
 import com.github.dnvriend.util.TimeUtil
 
 trait Service extends Marshallers with GenericServices {
+  import spray.json._
+  implicit val personjsonformat = jsonFormat3(Person)
+
+  def personSource(numberOfPersons: Int): Source[ByteString, Any] = Source.combine(
+    Source.single("[").map(ByteString(_)),
+    Source.repeat(Person("foo", 1)).zipWith(Source.fromIterator(() ⇒ Iterator from 0)) {
+      case (p, i) ⇒ p.copy(name = p.name + "-" + i, age = i, married = i % 2 == 0)
+    }.take(numberOfPersons).map(_.toJson.prettyPrint).intersperse(",").map(ByteString(_)),
+    Source.single("]").map(ByteString(_))
+  )(nr ⇒ Concat(nr))
 
   def routes: Route =
     logRequestResult("akka-http-test") {
@@ -46,11 +56,22 @@ trait Service extends Marshallers with GenericServices {
               }
           }
         } ~ pathPrefix("persons") {
-          pathEnd {
-            complete {
-              Seq(Person("John Doe", 25), Person("Foo Bar", 30))
+          pathPrefix("strict") {
+            pathEnd {
+              complete(Seq(Person("foo", 1), Person("bar", 2)))
             }
-          }
+          } ~
+            pathPrefix("stream" / IntNumber) { numberOfPersons ⇒
+              pathEnd {
+                complete {
+                  HttpResponse(
+                    //                entity = HttpEntity.Chunked(MediaTypes.`application/json`, Source.tick(0.seconds, 1.second, "test"))
+                    //                entity = HttpEntity.CloseDelimited(ContentTypes.`text/plain(UTF-8)`, Source.tick(0.seconds, 500.millis, ByteString("test")).take(10))
+                    entity = HttpEntity.CloseDelimited(ContentTypes.`text/plain(UTF-8)`, personSource(numberOfPersons))
+                  )
+                }
+              }
+            }
         } ~ pathPrefix("ping") {
           complete {
             Ping(TimeUtil.timestamp)
@@ -71,7 +92,6 @@ object SimpleServer extends App with Service with CoreServices {
       |#    # #   #  #   #  #    #       #    #   #     #   #              #   #      #    #   #
       |#    # #    # #    # #    #       #    #   #     #   #              #   ######  ####    #
       |
-      |$BuildInfo
       |
     """.stripMargin
   println(banner)
