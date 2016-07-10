@@ -20,22 +20,11 @@ import akka.http.scaladsl._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.stream.scaladsl.{ Concat, Source }
-import akka.util.ByteString
+import akka.stream.scaladsl.Source
 import com.github.dnvriend.domain.Person
 import com.github.dnvriend.util.TimeUtil
 
 trait Service extends Marshallers with GenericServices {
-  import spray.json._
-  implicit val personjsonformat = jsonFormat3(Person)
-
-  def personSource(numberOfPersons: Int): Source[ByteString, Any] = Source.combine(
-    Source.single("[").map(ByteString(_)),
-    Source.repeat(Person("foo", 1)).zipWith(Source.fromIterator(() ⇒ Iterator from 0)) {
-      case (p, i) ⇒ p.copy(name = p.name + "-" + i, age = i, married = i % 2 == 0)
-    }.take(numberOfPersons).map(_.toJson.prettyPrint).intersperse(",").map(ByteString(_)),
-    Source.single("]").map(ByteString(_))
-  )(nr ⇒ Concat(nr))
 
   def routes: Route =
     logRequestResult("akka-http-test") {
@@ -64,11 +53,13 @@ trait Service extends Marshallers with GenericServices {
             pathPrefix("stream" / IntNumber) { numberOfPersons ⇒
               pathEnd {
                 complete {
-                  HttpResponse(
-                    //                entity = HttpEntity.Chunked(MediaTypes.`application/json`, Source.tick(0.seconds, 1.second, "test"))
-                    //                entity = HttpEntity.CloseDelimited(ContentTypes.`text/plain(UTF-8)`, Source.tick(0.seconds, 500.millis, ByteString("test")).take(10))
-                    entity = HttpEntity.CloseDelimited(ContentTypes.`text/plain(UTF-8)`, personSource(numberOfPersons))
-                  )
+                  Source.repeat(Person("foo", 1)).zipWith(Source.fromIterator(() ⇒ Iterator from 0)) {
+                    case (p, i) ⇒ p.copy(
+                      name = if (i % 10 == 0) "baz-" + i else if (i % 2 == 0) "foo-" + i else "bar-" + i,
+                      age = i,
+                      married = i % 2 == 0
+                    )
+                  }.take(numberOfPersons)
                 }
               }
             }

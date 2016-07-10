@@ -20,15 +20,15 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport
 import akka.http.scaladsl.marshalling._
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.unmarshalling.{ FromRequestUnmarshaller, Unmarshaller, FromEntityUnmarshaller }
+import akka.http.scaladsl.unmarshalling.{ FromEntityUnmarshaller, Unmarshaller }
 import akka.stream.Materializer
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{ Concat, Source }
 import akka.util.ByteString
 import com.github.dnvriend.domain.Person
 import spray.json.{ DefaultJsonProtocol, _ }
 
 import scala.concurrent.ExecutionContext
-import scala.xml.{ Elem, XML, NodeSeq }
+import scala.xml.{ Elem, NodeSeq, XML }
 
 /**
  * See: http://liddellj.com/using-media-type-parameters-to-version-an-http-api/
@@ -41,6 +41,7 @@ import scala.xml.{ Elem, XML, NodeSeq }
  */
 object MediaVersionTypes {
   def customMediatype(subType: String) = MediaType.customWithFixedCharset("application", subType, HttpCharsets.`UTF-8`)
+
   val `application/vnd.acme.v1+json` = customMediatype("vnd.acme.v1+json")
   val `application/vnd.acme.v2+json` = customMediatype("vnd.acme.v2+json")
   val `application/vnd.acme.v1+xml` = customMediatype("vnd.acme.v1+xml")
@@ -49,7 +50,9 @@ object MediaVersionTypes {
 
 // marshalling containers (Value Objects)
 case class Ping(timestamp: String)
+
 case class PersonV1(name: String, age: Int)
+
 case class PersonV2(name: String, age: Int, married: Boolean)
 
 trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXmlSupport {
@@ -57,14 +60,19 @@ trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXm
 
   implicit val personJsonFormatV1 = jsonFormat2(PersonV1)
   implicit val personJsonFormatV2 = jsonFormat3(PersonV2)
-
   implicit val pingJsonFormat = jsonFormat1(Ping)
 
   def marshalPersonXmlV2(person: PersonV2): NodeSeq =
     <person>
-      <name>{ person.name }</name>
-      <age>{ person.age }</age>
-      <married>{ person.married }</married>
+      <name>
+        { person.name }
+      </name>
+      <age>
+        { person.age }
+      </age>
+      <married>
+        { person.married }
+      </married>
     </person>
 
   def marshalPersonsXmlV2(persons: Iterable[PersonV2]) =
@@ -74,8 +82,12 @@ trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXm
 
   def marshalPersonXmlV1(person: PersonV1): NodeSeq =
     <person>
-      <name>{ person.name }</name>
-      <age>{ person.age }</age>
+      <name>
+        { person.name }
+      </name>
+      <age>
+        { person.age }
+      </age>
     </person>
 
   def marshalPersonsXmlV1(persons: Iterable[PersonV1]) =
@@ -90,6 +102,24 @@ trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXm
   implicit def personsXmlFormatV2 = Marshaller.opaque[Iterable[PersonV2], NodeSeq](marshalPersonsXmlV2)
 
   implicit def personXmlFormatV2 = Marshaller.opaque[PersonV2, NodeSeq](marshalPersonXmlV2)
+
+  // from a Source[Person, Any]
+  implicit def personStreamingMarshaller: ToResponseMarshaller[Source[Person, Any]] = {
+    implicit val personFormat = jsonFormat3(Person)
+    Marshaller.oneOf(
+      Marshaller.withFixedContentType(MediaTypes.`application/json`) { persons ⇒
+        HttpResponse(entity =
+          HttpEntity.CloseDelimited(
+            ContentType(MediaTypes.`application/json`),
+            Source.combine(
+              Source.single("[").map(ByteString(_)),
+              persons.map(_.toJson.prettyPrint).intersperse(",").map(ByteString(_)),
+              Source.single("]").map(ByteString(_))
+            )(nr ⇒ Concat(nr))
+          ))
+      }
+    )
+  }
 
   /**
    * From the Iterable[Person] value-object convert to a version and then marshal, wrap in an entity;
