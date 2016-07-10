@@ -16,13 +16,14 @@
 
 package com.github.dnvriend
 
+import akka.NotUsed
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport
 import akka.http.scaladsl.marshalling._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.{ FromEntityUnmarshaller, Unmarshaller }
 import akka.stream.Materializer
-import akka.stream.scaladsl.{ Concat, Source }
+import akka.stream.scaladsl.{ Concat, Flow, Source }
 import akka.util.ByteString
 import com.github.dnvriend.domain.Person
 import spray.json.{ DefaultJsonProtocol, _ }
@@ -104,21 +105,19 @@ trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXm
   implicit def personXmlFormatV2 = Marshaller.opaque[PersonV2, NodeSeq](marshalPersonXmlV2)
 
   // from a Source[Person, Any]
-  implicit def personStreamingMarshaller: ToResponseMarshaller[Source[Person, Any]] = {
+  implicit val personStreamingMarshaller: ToResponseMarshaller[Source[Person, Any]] = {
     implicit val personFormat = jsonFormat3(Person)
-    Marshaller.oneOf(
-      Marshaller.withFixedContentType(MediaTypes.`application/json`) { persons ⇒
-        HttpResponse(entity =
-          HttpEntity.CloseDelimited(
-            ContentType(MediaTypes.`application/json`),
-            Source.combine(
-              Source.single("[").map(ByteString(_)),
-              persons.map(_.toJson.prettyPrint).intersperse(",").map(ByteString(_)),
-              Source.single("]").map(ByteString(_))
-            )(nr ⇒ Concat(nr))
-          ))
-      }
-    )
+    Marshaller.withFixedContentType(MediaTypes.`application/json`) { persons ⇒
+      HttpResponse(entity =
+        HttpEntity.CloseDelimited(
+          ContentType(MediaTypes.`application/json`),
+          Source.combine(
+            Source.single("["),
+            persons.map(_.toJson.prettyPrint).intersperse(","),
+            Source.single("]")
+          )(nr ⇒ Concat(nr)).map(ByteString(_))
+        ))
+    }
   }
 
   /**
