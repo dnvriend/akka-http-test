@@ -45,9 +45,15 @@ trait Service extends Marshallers with GenericServices {
               }
           }
         } ~ pathPrefix("persons") {
-          pathPrefix("strict") {
+          pathPrefix("strict" / IntNumber) { numberOfPersons ⇒
             pathEnd {
-              complete(Seq(Person("foo", 1), Person("bar", 2)))
+              complete((0 to numberOfPersons).map { i ⇒
+                Person(
+                  name = if (i % 10 == 0) "baz-" + i else if (i % 2 == 0) "foo-" + i else "bar-" + i,
+                  age = i,
+                  married = i % 2 == 0
+                )
+              })
             }
           } ~
             pathPrefix("stream" / IntNumber) { numberOfPersons ⇒
