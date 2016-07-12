@@ -1,6 +1,7 @@
 # akka-http-test #
 
 [![Join the chat at https://gitter.im/dnvriend/akka-http-test](https://badges.gitter.im/dnvriend/akka-http-test.svg)](https://gitter.im/dnvriend/akka-http-test?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build Status](https://travis-ci.org/dnvriend/akka-http-test.svg?branch=master)](https://travis-ci.org/dnvriend/akka-http-test)
 [![License](http://img.shields.io/:license-Apache%202-red.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 A study project how akka-http works. The code below is a bit compacted, so please use it for reference only how
