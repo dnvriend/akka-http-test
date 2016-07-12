@@ -19,7 +19,9 @@ package com.github.dnvriend.webservices.eetnu
 import akka.stream.scaladsl.Source
 import com.github.dnvriend.TestSpec
 import com.github.dnvriend.webservices.common.LatLon
+import org.scalatest.Ignore
 
+@Ignore
 class EetnuClientTest extends TestSpec {
   "venuesByQuery" should "Get Teddy venue with full properties" in {
     EetNuClient().venuesByQuery("1313 EG").futureValue.head mustBe {

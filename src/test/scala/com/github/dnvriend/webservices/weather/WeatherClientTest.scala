@@ -18,7 +18,9 @@ package com.github.dnvriend.webservices.weather
 
 import akka.stream.scaladsl.Source
 import com.github.dnvriend.TestSpec
+import org.scalatest.Ignore
 
+@Ignore
 class WeatherClientTest extends TestSpec with Marshallers {
   import spray.json._
 
