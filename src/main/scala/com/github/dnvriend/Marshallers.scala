@@ -16,14 +16,13 @@
 
 package com.github.dnvriend
 
-import akka.NotUsed
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport
 import akka.http.scaladsl.marshalling._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.{ FromEntityUnmarshaller, Unmarshaller }
 import akka.stream.Materializer
-import akka.stream.scaladsl.{ Concat, Flow, Source }
+import akka.stream.scaladsl.{ Concat, Source }
 import akka.util.ByteString
 import com.github.dnvriend.domain.Person
 import spray.json.{ DefaultJsonProtocol, _ }

@@ -5,7 +5,7 @@ version := "1.0.0"
 scalaVersion := "2.11.8"
 
 libraryDependencies ++= {
-  val akkaVersion = "2.4.8"
+  val akkaVersion = "2.4.9-RC1"
   Seq(
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
@@ -24,7 +24,7 @@ libraryDependencies ++= {
 
 scalacOptions ++= Seq("-feature", "-language:higherKinds", "-language:implicitConversions", "-deprecation", "-Ybackend:GenBCode", "-Ydelambdafy:method", "-target:jvm-1.8")
 
-licenses +=("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php"))
+licenses += ("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php"))
 
 // enable updating file headers //
 import com.typesafe.sbt.SbtScalariform

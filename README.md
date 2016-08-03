@@ -8,6 +8,9 @@ A study project how akka-http works. The code below is a bit compacted, so pleas
 the (new) API must be used. It will not compile/work correctly when you just copy/paste it. Check out the working 
 source code for correct usage.
 
+# Notice
+__Does not yet compile with Akka 2.4.9-RC1 as it misses dependencies in the distribution!__
+
 ## Contribution policy ##
 
 Contributions via GitHub pull requests are gladly accepted from their original author. Along with any pull requests, please state that the contribution is your original work and that you license the work to the project under the project's open source license. Whether or not you state this explicitly, by submitting any copyrighted material via pull request, email, or other means you agree to license the material under the project's open source license and warrant that you have the legal authority to do so.
@@ -38,6 +41,11 @@ To use akka-http we need the following dependencies:
   * Routing DSL
 * `akka-http-spray-json-experimental:`:
   * Provides spray-json support
+
+# Source Streaming
+As of [Akka v2.4.9-RC1](http://doc.akka.io/docs/akka/2.4/scala/http/routing-dsl/source-streaming-support.html),
+akka-http supports  completing a request with an Akka Source[T, _], which makes it possible
+to easily build and consume streaming end-to-end APIs which apply back-pressure throughout the entire stack!
 
 # Web Service Clients (RPC)
 Akka-Http has a client API and as such RPC's can be created. Take a look at the package `com.github.dnvriend.webservices`, I have created
