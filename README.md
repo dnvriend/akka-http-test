@@ -229,6 +229,12 @@ When you run the example, you can try the following requests:
 ```bash
 # The latest version in JSON
 curl -H "Accept: application/json" localhost:8080/person
+# A stream of persons in CSV
+curl -H "Accept: text/csv" localhost:8080/persons/stream/100
+# A stream of persons in JSON
+curl -H "Accept: application/json" localhost:8080/persons/stream/100
+# A list of of persons in JSON
+curl -H "Accept: application/json" localhost:8080/persons/strict/100
 # The latest version in XML
 curl -H "Accept: application/xml" localhost:8080/person
 # Vendor specific header for JSON v1

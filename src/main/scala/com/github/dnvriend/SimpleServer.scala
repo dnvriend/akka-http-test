@@ -16,6 +16,7 @@
 
 package com.github.dnvriend
 
+import akka.NotUsed
 import akka.http.scaladsl._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
@@ -47,26 +48,12 @@ trait Service extends Marshallers with GenericServices {
         } ~ pathPrefix("persons") {
           pathPrefix("strict" / IntNumber) { numberOfPersons ⇒
             pathEnd {
-              complete((0 to numberOfPersons).map { i ⇒
-                Person(
-                  name = if (i % 10 == 0) "baz-" + i else if (i % 2 == 0) "foo-" + i else "bar-" + i,
-                  age = i,
-                  married = i % 2 == 0
-                )
-              })
+              complete(listOfPersons(numberOfPersons))
             }
           } ~
             pathPrefix("stream" / IntNumber) { numberOfPersons ⇒
               pathEnd {
-                complete {
-                  Source.repeat(Person("foo", 1)).zipWith(Source.fromIterator(() ⇒ Iterator from 0)) {
-                    case (p, i) ⇒ p.copy(
-                      name = if (i % 10 == 0) "baz-" + i else if (i % 2 == 0) "foo-" + i else "bar-" + i,
-                      age = i,
-                      married = i % 2 == 0
-                    )
-                  }.take(numberOfPersons)
-                }
+                complete(persons(numberOfPersons))
               }
             }
         } ~ pathPrefix("ping") {
@@ -75,6 +62,23 @@ trait Service extends Marshallers with GenericServices {
           }
         }
     }
+
+  private def persons(numberOfPersons: Int): Source[Person, NotUsed] =
+    Source.repeat(Person("foo", 1)).zipWith(Source.fromIterator(() ⇒ Iterator from 0)) {
+      case (p, i) ⇒ p.copy(
+        name = if (i % 10 == 0) "baz-" + i else if (i % 2 == 0) "foo-" + i else "bar-" + i,
+        age = i,
+        married = i % 2 == 0
+      )
+    }.take(numberOfPersons)
+
+  private def listOfPersons(numberOfPersons: Int): Seq[Person] = (0 to numberOfPersons).map { i ⇒
+    Person(
+      name = if (i % 10 == 0) "baz-" + i else if (i % 2 == 0) "foo-" + i else "bar-" + i,
+      age = i,
+      married = i % 2 == 0
+    )
+  }
 }
 
 object SimpleServer extends App with Service with CoreServices {
@@ -92,5 +96,5 @@ object SimpleServer extends App with Service with CoreServices {
       |
     """.stripMargin
   println(banner)
-  Http().bindAndHandle(routes, "0.0.0.0", 8080)
+  Http().bindAndHandle(routes, "0.0.0.0", 8002)
 }

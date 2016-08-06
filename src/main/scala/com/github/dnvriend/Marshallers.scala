@@ -16,13 +16,14 @@
 
 package com.github.dnvriend
 
+import akka.http.scaladsl.common.{ EntityStreamingSupport, JsonEntityStreamingSupport }
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport
 import akka.http.scaladsl.marshalling._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.{ FromEntityUnmarshaller, Unmarshaller }
 import akka.stream.Materializer
-import akka.stream.scaladsl.{ Concat, Source }
+import akka.stream.scaladsl.{ Flow, Source }
 import akka.util.ByteString
 import com.github.dnvriend.domain.Person
 import spray.json.{ DefaultJsonProtocol, _ }
@@ -56,11 +57,37 @@ case class PersonV1(name: String, age: Int)
 case class PersonV2(name: String, age: Int, married: Boolean)
 
 trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXmlSupport {
-  implicit def ec: ExecutionContext
 
   implicit val personJsonFormatV1 = jsonFormat2(PersonV1)
   implicit val personJsonFormatV2 = jsonFormat3(PersonV2)
   implicit val pingJsonFormat = jsonFormat1(Ping)
+
+  // akka-http supports source streaming
+  // see: http://doc.akka.io/docs/akka/2.4/scala/http/routing-dsl/source-streaming-support.html
+  //
+  // We will configure the Framing renderer to use the line-by-line approach,
+  // but it will not create valid JSON, it is pretty handy when streaming JSON objects
+  //
+  // In a stream, there doesn't have to be an order; it depends on your use case,
+  // but if strict ordering isn't important, the marshaller can be in parallel making streaming
+  // even faster! If ordering is important, set unordered to 'false'.
+  //
+  val start = ByteString.empty
+  val sep = ByteString("\n")
+  val end = ByteString.empty
+  implicit val jsonStreamingSupport: JsonEntityStreamingSupport = EntityStreamingSupport.json()
+    .withFramingRenderer(Flow[ByteString].intersperse(start, sep, end))
+    .withParallelMarshalling(parallelism = 8, unordered = true)
+  implicit val personJsonFormat = jsonFormat3(Person)
+
+  // return a CSV stream
+  //  implicit val personAsCsv = Marshaller.strict[Person, ByteString] { person ⇒
+  //    Marshalling.WithFixedContentType(ContentTypes.`text/csv(UTF-8)`, () ⇒ {
+  //      val Person(name, age, married) = person
+  //      val sep = ByteString("\n")
+  //      ByteString(List(name, age, married).mkString(",") + sep)
+  //    })
+  //  }
 
   def marshalPersonXmlV2(person: PersonV2): NodeSeq =
     <person>
@@ -103,27 +130,11 @@ trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXm
 
   implicit def personXmlFormatV2 = Marshaller.opaque[PersonV2, NodeSeq](marshalPersonXmlV2)
 
-  // from a Source[Person, Any]
-  implicit val personStreamingMarshaller: ToResponseMarshaller[Source[Person, Any]] = {
-    implicit val personFormat = jsonFormat3(Person)
-    Marshaller.withFixedContentType(MediaTypes.`application/json`) { persons ⇒
-      HttpResponse(entity =
-        HttpEntity.CloseDelimited(
-          ContentType(MediaTypes.`application/json`),
-          Source.combine(
-            Source.single("["),
-            persons.map(_.toJson.prettyPrint).intersperse(","),
-            Source.single("]")
-          )(nr ⇒ Concat(nr)).map(ByteString(_))
-        ))
-    }
-  }
-
   /**
    * From the Iterable[Person] value-object convert to a version and then marshal, wrap in an entity;
    * communicate with the VO in the API
    */
-  implicit def personsMarshaller: ToResponseMarshaller[Iterable[Person]] = Marshaller.oneOf(
+  implicit def personsMarshaller(implicit ec: ExecutionContext): ToResponseMarshaller[Iterable[Person]] = Marshaller.oneOf(
     Marshaller.withFixedContentType(MediaTypes.`application/json`) { persons ⇒
       HttpResponse(entity =
         HttpEntity(ContentType(MediaTypes.`application/json`), persons.map(person ⇒ PersonV2(person.name, person.age, person.married)).toJson.compactPrint))
@@ -169,7 +180,7 @@ trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXm
    * From the Person value-object convert to a version and then marshal, wrap in an entity;
    * communicate with the VO in the API
    */
-  implicit def personMarshaller: ToResponseMarshaller[Person] = Marshaller.oneOf(
+  implicit def personMarshaller(implicit ec: ExecutionContext): ToResponseMarshaller[Person] = Marshaller.oneOf(
     Marshaller.withFixedContentType(MediaTypes.`application/json`) { person ⇒
       HttpResponse(entity =
         HttpEntity(ContentType(MediaTypes.`application/json`), PersonV2(person.name, person.age, person.married).toJson.compactPrint))
