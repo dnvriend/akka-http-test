@@ -8,9 +8,6 @@ A study project how akka-http works. The code below is a bit compacted, so pleas
 the (new) API must be used. It will not compile/work correctly when you just copy/paste it. Check out the working 
 source code for correct usage.
 
-# Notice
-__Does not yet compile with Akka 2.4.9-RC1 as it misses dependencies in the distribution!__
-
 ## Contribution policy ##
 
 Contributions via GitHub pull requests are gladly accepted from their original author. Along with any pull requests, please state that the contribution is your original work and that you license the work to the project under the project's open source license. Whether or not you state this explicitly, by submitting any copyrighted material via pull request, email, or other means you agree to license the material under the project's open source license and warrant that you have the legal authority to do so.
@@ -55,11 +52,9 @@ from `application.conf`. The RPC clients also support for single RPC without cac
 you can stream data to your clients. For usage please see the tests for the RPC clients. Good stuff :)
 
 # Web Server
-A new HTTP server can be launched using the `Http()` class. The `bindAndHandle()` method is a convenience method which starts 
-a new HTTP server at the given endpoint and uses the given 'handler' `Flow` for processing  all incoming connections. 
+A new HTTP server can be launched using the `Http()` class. The `bindAndHandle()` method is a convenience method which starts a new HTTP server at the given endpoint and uses the given 'handler' `Flow` for processing  all incoming connections. 
 
-Note that there is no backpressure being applied to the 'connections' `Source`, i.e. all connections are being accepted 
-at maximum rate, which, depending on the applications, might present a DoS risk!
+The number of [concurrently accepted connections](https://github.com/akka/akka/blob/master/akka-http-core/src/main/scala/akka/http/scaladsl/Http.scala#L130) can be configured by overriding `akka.http.server.max-connections` setting.
 
 ```scala
 import akka.http.scaladsl._
