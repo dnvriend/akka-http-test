@@ -44,12 +44,11 @@ SbtScalariform.autoImport.scalariformPreferences := SbtScalariform.autoImport.sc
   .setPreference(AlignSingleLineCaseStatements, true)
   .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 100)
   .setPreference(DoubleIndentClassDeclaration, true)
-  .setPreference(RewriteArrowSymbols, true)
 
 // enable sbt-revolver
 Revolver.settings ++ Seq(
   Revolver.enableDebugging(port = 5050, suspend = false),
-  mainClass in reStart := Some("com.github.dnvriend.SimpleServer")
+  mainClass in reStart := Some("com.github.dnvriend.LowLevelServer")
 )
 
 // enable plugins //

@@ -10,7 +10,8 @@
         </encoder>
     </appender>
 
-    <!--<logger name="org.github.dnvriend" level="debug"/>-->
+    <logger name="org.github.dnvriend" level="debug"/>
+    <logger name="com.typesafe" level="debug"/>
     <logger name="akka.http" level="debug"/>
     <logger name="akka" level="debug"/>
 
