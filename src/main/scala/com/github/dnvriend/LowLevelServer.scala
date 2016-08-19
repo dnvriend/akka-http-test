@@ -25,16 +25,15 @@ import akka.pattern.ask
 import akka.stream.scaladsl.{ Flow, Sink, Source }
 import akka.stream.{ ActorMaterializer, Materializer }
 import akka.util.Timeout
-import com.github.dnvriend.LowLevelServer.PersonWithId
 import com.github.dnvriend.domain.Person
-import spray.json.DefaultJsonProtocol
-import spray.json._
+import spray.json.{ DefaultJsonProtocol, _ }
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 
+final case class PersonWithId(id: Long, name: String, age: Int, married: Boolean)
+
 object LowLevelServer extends App with DefaultJsonProtocol {
-  final case class PersonWithId(id: Long, name: String, age: Int, married: Boolean)
   // setting up some machinery
   implicit val system: ActorSystem = ActorSystem()
   implicit val mat: Materializer = ActorMaterializer()
