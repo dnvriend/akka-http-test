@@ -16,12 +16,14 @@
 
 package com.github.dnvriend
 
-import akka.actor.{ ActorSystem, Props }
+import akka.actor.{ ActorRef, ActorSystem, Props }
 import akka.event.{ Logging, LoggingAdapter }
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import akka.http.scaladsl.marshalling.ToResponseMarshaller
 import akka.http.scaladsl.model.{ StatusCodes, Uri }
 import akka.http.scaladsl.server.{ Directives, Route }
+import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
 import akka.pattern.ask
 import akka.stream.scaladsl.{ Sink, Source }
 import akka.stream.{ ActorMaterializer, Materializer }
@@ -29,38 +31,68 @@ import akka.util.Timeout
 import com.github.dnvriend.domain.Person
 import spray.json.DefaultJsonProtocol
 
-import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration._
+import scala.concurrent.{ ExecutionContext, Future }
 
-object HighLevelServer extends App with SprayJsonSupport with DefaultJsonProtocol with Directives {
+// see: akka.http.scaladsl.marshalling.ToResponseMarshallable
+// see: akka.http.scaladsl.marshalling.PredefinedToResponseMarshallers
+object Route extends Directives {
+  def routes(personDb: ActorRef)(implicit timeout: Timeout, trmSingle: ToResponseMarshaller[PersonWithId], trmList: ToResponseMarshaller[List[PersonWithId]], fru: FromRequestUnmarshaller[Person]): Route = {
+    pathEndOrSingleSlash {
+      redirect(Uri("/api/person"), StatusCodes.PermanentRedirect)
+    } ~
+      pathPrefix("api" / "person") {
+        get {
+          path(IntNumber) { id =>
+            println(s"PathEndsInNumber=$id")
+            complete((personDb ? "findAll").mapTo[List[PersonWithId]])
+          } ~
+            pathEndOrSingleSlash {
+              parameter("foo") { foo =>
+                println(s"foo=$foo")
+                complete((personDb ? "findAll").mapTo[List[PersonWithId]])
+              } ~
+                parameter('bar) { bar =>
+                  println(s"bar=$bar")
+                  complete((personDb ? "findAll").mapTo[List[PersonWithId]])
+                } ~
+                complete((personDb ? "findAll").mapTo[List[PersonWithId]])
+            }
+        } ~
+          (post & pathEndOrSingleSlash & entity(as[Person])) { person =>
+            complete((personDb ? person).mapTo[PersonWithId])
+          }
+      } ~
+      path("failure") {
+        pathEnd {
+          complete(Future.failed[String](new RuntimeException("Simulated Failure")))
+        }
+      } ~
+      path("success") {
+        pathEnd {
+          complete(Future.successful("Success!!"))
+        }
+      }
+  }
+}
+
+object HighLevelServer extends App with SprayJsonSupport with DefaultJsonProtocol {
   // setting up some machinery
   implicit val system: ActorSystem = ActorSystem()
   implicit val mat: Materializer = ActorMaterializer()
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val log: LoggingAdapter = Logging(system, this.getClass)
   implicit val timeout: Timeout = Timeout(10.seconds)
+
+  // the jsonFormats for Person and PersonWithId
   implicit val personJsonFormat = jsonFormat3(Person)
   implicit val personWithIdJsonFormat = jsonFormat4(PersonWithId)
 
   val personDb = system.actorOf(Props[PersonDb])
 
-  val routes: Route = {
-    pathEndOrSingleSlash {
-      redirect(Uri("/api/person"), StatusCodes.PermanentRedirect)
-    } ~
-      path("api" / "person") {
-        get {
-          complete((personDb ? "findAll").mapTo[List[PersonWithId]])
-        } ~
-          (post & entity(as[Person])) { person =>
-            complete((personDb ? person).mapTo[PersonWithId])
-          }
-      }
-  }
-
   //  Http().bindAndHandle(routes, "0.0.0.0", 8080)
 
   val serverSource: Source[Http.IncomingConnection, Future[Http.ServerBinding]] =
     Http().bind(interface = "localhost", port = 8080)
-  val binding: Future[Http.ServerBinding] = serverSource.to(Sink.foreach(_.handleWith(routes))).run
+  val binding: Future[Http.ServerBinding] = serverSource.to(Sink.foreach(_.handleWith(Route.routes(personDb)))).run
 }

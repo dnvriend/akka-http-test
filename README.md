@@ -8,6 +8,9 @@ A study project how akka-http works. The code below is a bit compacted, so pleas
 the (new) API must be used. It will not compile/work correctly when you just copy/paste it. Check out the working 
 source code for correct usage.
 
+## Mastering Akka by Chris Baxter
+A great book ETA October 2016 by Packt Publishing, written by Chris Baxter and reviewed by me is [Mastering Akka](https://www.packtpub.com/application-development/mastering-akka) which will contain everything you ever wanted to know about akka-actors, akka-persistence, akka-streams, akka-http and akka-cluster, ConductR, Domain Driven Design and Event Sourcing. Its a book you just should have.
+
 ## Contribution policy ##
 
 Contributions via GitHub pull requests are gladly accepted from their original author. Along with any pull requests, please state that the contribution is your original work and that you license the work to the project under the project's open source license. Whether or not you state this explicitly, by submitting any copyrighted material via pull request, email, or other means you agree to license the material under the project's open source license and warrant that you have the legal authority to do so.

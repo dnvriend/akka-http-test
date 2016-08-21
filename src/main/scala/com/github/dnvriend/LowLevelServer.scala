@@ -69,9 +69,10 @@ object LowLevelServer extends App with DefaultJsonProtocol {
   }).run()
 
   def personRequestHandler(req: HttpRequest): Future[HttpResponse] = req match {
-    case HttpRequest(HttpMethods.GET, Uri.Path("/api/person"), _, _, _) =>
-      (personDb ? "findAll").mapTo[List[PersonWithId]]
-        .map(xs => HttpResponse(StatusCodes.OK, entity = HttpEntity(ContentTypes.`application/json`, xs.toJson.compactPrint)))
+    case HttpRequest(HttpMethods.GET, Uri.Path("/api/person"), _, _, _) => for {
+      xs <- (personDb ? "findAll").mapTo[List[PersonWithId]]
+      entity = HttpEntity(ContentTypes.`application/json`, xs.toJson.compactPrint)
+    } yield HttpResponse(StatusCodes.OK, entity = entity)
     case HttpRequest(HttpMethods.POST, Uri.Path("/api/person"), _, ent, _) => for {
       strictEntity <- ent.toStrict(1.second)
       person <- (personDb ? strictEntity.data.utf8String.parseJson.convertTo[Person]).mapTo[PersonWithId]
