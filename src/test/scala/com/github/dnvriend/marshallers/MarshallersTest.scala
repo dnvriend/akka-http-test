@@ -20,14 +20,14 @@ import akka.http.scaladsl.model.MediaTypes._
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import com.github.dnvriend.{ MediaVersionTypes, Service, TestSpecWithoutSystem }
+import com.github.dnvriend._
 
 /**
  * see: https://github.com/akka/akka/blob/releasing-akka-stream-and-http-experimental-1.0-RC4/akka-http-testkit/src/test/scala/akka/http/scaladsl/testkit/ScalatestRouteTestSpec.scala
  * see: http://spray.io/documentation/1.2.3/spray-testkit/
  */
-class MarshallersTest extends TestSpecWithoutSystem with Service with ScalatestRouteTest {
-
+class MarshallersTest extends TestSpecWithoutSystem with ScalatestRouteTest {
+  import Marshallers._
   val jsonHeader = Accept(`application/json`)
   val xmlHeader = Accept(`application/xml`)
 
@@ -36,50 +36,53 @@ class MarshallersTest extends TestSpecWithoutSystem with Service with ScalatestR
   val xmlHeaderV1 = Accept(MediaVersionTypes.`application/vnd.acme.v1+xml`)
   val xmlHeaderV2 = Accept(MediaVersionTypes.`application/vnd.acme.v2+xml`)
 
-  "Get to ping" should "should include timestamp field" in {
-    Get("/ping") ~> routes ~> check {
+  def withPersonDao(f: PersonDao => Unit): Unit =
+    f(new PersonDao)
+
+  "Get to ping" should "should include timestamp field" in withPersonDao { dao =>
+    Get("/ping") ~> SimpleServerRestRoutes.routes(dao) ~> check {
       status shouldEqual OK
       responseAs[String] should include("timestamp")
     }
   }
 
-  "Get to person as JSON" should "return v2 for application/json" in {
-    Get("/person") ~> addHeader(jsonHeader) ~> routes ~> check {
+  "Get to person as JSON" should "return v2 for application/json" in withPersonDao { dao =>
+    Get("/person") ~> addHeader(jsonHeader) ~> SimpleServerRestRoutes.routes(dao) ~> check {
       status shouldEqual OK
       responseAs[String] shouldBe """{"name":"John Doe","age":25,"married":false}"""
     }
   }
 
-  it should "return v1 for application/vnd.acme.v1+json" in {
-    Get("/person") ~> addHeader(jsonHeaderV1) ~> routes ~> check {
+  it should "return v1 for application/vnd.acme.v1+json" in withPersonDao { dao =>
+    Get("/person") ~> addHeader(jsonHeaderV1) ~> SimpleServerRestRoutes.routes(dao) ~> check {
       status shouldEqual OK
       responseAs[String] shouldBe """{"name":"John Doe","age":25}"""
     }
   }
 
-  it should "return v2 for application/vnd.acme.v2+json" in {
-    Get("/person") ~> addHeader(jsonHeaderV2) ~> routes ~> check {
+  it should "return v2 for application/vnd.acme.v2+json" in withPersonDao { dao =>
+    Get("/person") ~> addHeader(jsonHeaderV2) ~> SimpleServerRestRoutes.routes(dao) ~> check {
       status shouldEqual OK
       responseAs[String] shouldBe """{"name":"John Doe","age":25,"married":false}"""
     }
   }
 
-  "Get person as XML" should "return v2 for application/xml" in {
-    Get("/person") ~> addHeader(xmlHeader) ~> routes ~> check {
+  "Get person as XML" should "return v2 for application/xml" in withPersonDao { dao =>
+    Get("/person") ~> addHeader(xmlHeader) ~> SimpleServerRestRoutes.routes(dao) ~> check {
       status shouldEqual OK
       responseAs[String] should include("<married>")
     }
   }
 
-  it should "return v1 for application/vnd.acme.v1+xml" in {
-    Get("/person") ~> addHeader(xmlHeaderV1) ~> routes ~> check {
+  it should "return v1 for application/vnd.acme.v1+xml" in withPersonDao { dao =>
+    Get("/person") ~> addHeader(xmlHeaderV1) ~> SimpleServerRestRoutes.routes(dao) ~> check {
       status shouldEqual OK
       responseAs[String] should not include "<married>"
     }
   }
 
-  it should "return v2 for application/vnd.acme.v2+xml" in {
-    Get("/person") ~> addHeader(xmlHeaderV2) ~> routes ~> check {
+  it should "return v2 for application/vnd.acme.v2+xml" in withPersonDao { dao =>
+    Get("/person") ~> addHeader(xmlHeaderV2) ~> SimpleServerRestRoutes.routes(dao) ~> check {
       status shouldEqual OK
       responseAs[String] should include("<married>")
     }
