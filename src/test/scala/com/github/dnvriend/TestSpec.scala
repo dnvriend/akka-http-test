@@ -43,7 +43,7 @@ class TestSpec extends FlatSpec with Matchers with ScalaFutures with TryValues w
   def randomId: String = UUID.randomUUID.toString
   val id: String = randomId
 
-  def withInputStream(fileName: String)(f: InputStream ⇒ Unit): Unit = {
+  def withInputStream(fileName: String)(f: InputStream => Unit): Unit = {
     val is = fromClasspathAsStream(fileName)
     try { f(is) } finally { Try(is.close()) }
   }

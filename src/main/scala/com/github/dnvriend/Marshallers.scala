@@ -16,7 +16,7 @@
 
 package com.github.dnvriend
 
-import akka.http.scaladsl.common.{ EntityStreamingSupport, JsonEntityStreamingSupport }
+import akka.http.scaladsl.common.{ CsvEntityStreamingSupport, EntityStreamingSupport, JsonEntityStreamingSupport }
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport
 import akka.http.scaladsl.marshalling._
@@ -56,38 +56,14 @@ case class PersonV1(name: String, age: Int)
 
 case class PersonV2(name: String, age: Int, married: Boolean)
 
+object Marshallers extends Marshallers
+
 trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXmlSupport {
 
   implicit val personJsonFormatV1 = jsonFormat2(PersonV1)
   implicit val personJsonFormatV2 = jsonFormat3(PersonV2)
   implicit val pingJsonFormat = jsonFormat1(Ping)
-
-  // akka-http supports source streaming
-  // see: http://doc.akka.io/docs/akka/2.4/scala/http/routing-dsl/source-streaming-support.html
-  //
-  // We will configure the Framing renderer to use the line-by-line approach,
-  // but it will not create valid JSON, it is pretty handy when streaming JSON objects
-  //
-  // In a stream, there doesn't have to be an order; it depends on your use case,
-  // but if strict ordering isn't important, the marshaller can be in parallel making streaming
-  // even faster! If ordering is important, set unordered to 'false'.
-  //
-  val start = ByteString.empty
-  val sep = ByteString("\n")
-  val end = ByteString.empty
-  implicit val jsonStreamingSupport: JsonEntityStreamingSupport = EntityStreamingSupport.json()
-    .withFramingRenderer(Flow[ByteString].intersperse(start, sep, end))
-    .withParallelMarshalling(parallelism = 8, unordered = true)
   implicit val personJsonFormat = jsonFormat3(Person)
-
-  // return a CSV stream
-  //  implicit val personAsCsv = Marshaller.strict[Person, ByteString] { person ⇒
-  //    Marshalling.WithFixedContentType(ContentTypes.`text/csv(UTF-8)`, () ⇒ {
-  //      val Person(name, age, married) = person
-  //      val sep = ByteString("\n")
-  //      ByteString(List(name, age, married).mkString(",") + sep)
-  //    })
-  //  }
 
   def marshalPersonXmlV2(person: PersonV2): NodeSeq =
     <person>
@@ -135,43 +111,43 @@ trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXm
    * communicate with the VO in the API
    */
   implicit def personsMarshaller(implicit ec: ExecutionContext): ToResponseMarshaller[Iterable[Person]] = Marshaller.oneOf(
-    Marshaller.withFixedContentType(MediaTypes.`application/json`) { persons ⇒
+    Marshaller.withFixedContentType(MediaTypes.`application/json`) { persons =>
       HttpResponse(entity =
-        HttpEntity(ContentType(MediaTypes.`application/json`), persons.map(person ⇒ PersonV2(person.name, person.age, person.married)).toJson.compactPrint))
+        HttpEntity(ContentType(MediaTypes.`application/json`), persons.map(person => PersonV2(person.name, person.age, person.married)).toJson.compactPrint))
     },
-    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v1+json`) { persons ⇒
+    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v1+json`) { persons =>
       HttpResponse(entity =
-        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v1+json`), persons.map(person ⇒ PersonV1(person.name, person.age)).toJson.compactPrint))
+        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v1+json`), persons.map(person => PersonV1(person.name, person.age)).toJson.compactPrint))
     },
-    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v2+json`) { persons ⇒
+    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v2+json`) { persons =>
       HttpResponse(entity =
-        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v2+json`), persons.map(person ⇒ PersonV2(person.name, person.age, person.married)).toJson.compactPrint))
+        HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v2+json`), persons.map(person => PersonV2(person.name, person.age, person.married)).toJson.compactPrint))
     },
-    Marshaller.withOpenCharset(MediaTypes.`application/xml`) { (persons, charset) ⇒
+    Marshaller.withOpenCharset(MediaTypes.`application/xml`) { (persons, charset) =>
       HttpResponse(entity =
         HttpEntity.CloseDelimited(
           ContentType.WithCharset(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`),
-          Source.fromIterator(() ⇒ persons.iterator).mapAsync(1) { person ⇒
-            Marshal(persons.map(person ⇒ PersonV2(person.name, person.age, person.married))).to[NodeSeq]
-          }.map(ns ⇒ ByteString(ns.toString))
+          Source.fromIterator(() => persons.iterator).mapAsync(1) { person =>
+            Marshal(persons.map(person => PersonV2(person.name, person.age, person.married))).to[NodeSeq]
+          }.map(ns => ByteString(ns.toString))
         ))
     },
-    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v1+xml`) { persons ⇒
+    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v1+xml`) { persons =>
       HttpResponse(entity =
         HttpEntity.CloseDelimited(
           ContentType(MediaVersionTypes.`application/vnd.acme.v1+xml`),
-          Source.fromIterator(() ⇒ persons.iterator).mapAsync(1) { person ⇒
-            Marshal(persons.map(person ⇒ PersonV1(person.name, person.age))).to[NodeSeq]
-          }.map(ns ⇒ ByteString(ns.toString))
+          Source.fromIterator(() => persons.iterator).mapAsync(1) { person =>
+            Marshal(persons.map(person => PersonV1(person.name, person.age))).to[NodeSeq]
+          }.map(ns => ByteString(ns.toString))
         ))
     },
-    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v2+xml`) { persons ⇒
+    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v2+xml`) { persons =>
       HttpResponse(entity =
         HttpEntity.CloseDelimited(
           ContentType(MediaVersionTypes.`application/vnd.acme.v2+xml`),
-          Source.fromIterator(() ⇒ persons.iterator).mapAsync(1) { person ⇒
-            Marshal(persons.map(person ⇒ PersonV2(person.name, person.age, person.married))).to[NodeSeq]
-          }.map(ns ⇒ ByteString(ns.toString))
+          Source.fromIterator(() => persons.iterator).mapAsync(1) { person =>
+            Marshal(persons.map(person => PersonV2(person.name, person.age, person.married))).to[NodeSeq]
+          }.map(ns => ByteString(ns.toString))
         ))
     }
   )
@@ -181,47 +157,47 @@ trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXm
    * communicate with the VO in the API
    */
   implicit def personMarshaller(implicit ec: ExecutionContext): ToResponseMarshaller[Person] = Marshaller.oneOf(
-    Marshaller.withFixedContentType(MediaTypes.`application/json`) { person ⇒
+    Marshaller.withFixedContentType(MediaTypes.`application/json`) { person =>
       HttpResponse(entity =
         HttpEntity(ContentType(MediaTypes.`application/json`), PersonV2(person.name, person.age, person.married).toJson.compactPrint))
     },
-    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v1+json`) { person ⇒
+    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v1+json`) { person =>
       HttpResponse(entity =
         HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v1+json`), PersonV1(person.name, person.age).toJson.compactPrint))
     },
-    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v2+json`) { person ⇒
+    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v2+json`) { person =>
       HttpResponse(entity =
         HttpEntity(ContentType(MediaVersionTypes.`application/vnd.acme.v2+json`), PersonV2(person.name, person.age, person.married).toJson.compactPrint))
     },
-    Marshaller.withOpenCharset(MediaTypes.`application/xml`) { (person, charset) ⇒
+    Marshaller.withOpenCharset(MediaTypes.`application/xml`) { (person, charset) =>
       HttpResponse(entity =
         HttpEntity.CloseDelimited(
           ContentType.WithCharset(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`),
           Source.fromFuture(Marshal(PersonV2(person.name, person.age, person.married)).to[NodeSeq])
-            .map(ns ⇒ ByteString(ns.toString))
+            .map(ns => ByteString(ns.toString))
         ))
     },
-    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v1+xml`) { person ⇒
+    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v1+xml`) { person =>
       HttpResponse(entity =
         HttpEntity.CloseDelimited(
           ContentType(MediaVersionTypes.`application/vnd.acme.v1+xml`),
           Source.fromFuture(Marshal(PersonV1(person.name, person.age)).to[NodeSeq])
-            .map(ns ⇒ ByteString(ns.toString))
+            .map(ns => ByteString(ns.toString))
         ))
     },
-    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v2+xml`) { person ⇒
+    Marshaller.withFixedContentType(MediaVersionTypes.`application/vnd.acme.v2+xml`) { person =>
       HttpResponse(entity =
         HttpEntity.CloseDelimited(
           ContentType(MediaVersionTypes.`application/vnd.acme.v2+xml`),
           Source.fromFuture(Marshal(PersonV2(person.name, person.age, person.married)).to[NodeSeq])
-            .map(ns ⇒ ByteString(ns.toString))
+            .map(ns => ByteString(ns.toString))
         ))
     }
   )
 
   // curl -X POST -H "Content-Type: application/xml" -d '<person><name>John Doe</name><age>25</age><married>true</married></person>' localhost:8080/person
   def personXmlEntityUnmarshaller(implicit mat: Materializer): FromEntityUnmarshaller[Person] =
-    Unmarshaller.byteStringUnmarshaller.forContentTypes(MediaTypes.`application/xml`).mapWithCharset { (data, charset) ⇒
+    Unmarshaller.byteStringUnmarshaller.forContentTypes(MediaTypes.`application/xml`).mapWithCharset { (data, charset) =>
       val input: String = if (charset == HttpCharsets.`UTF-8`) data.utf8String else data.decodeString(charset.nioCharset.name)
       val xml: Elem = XML.loadString(input)
       val name: String = (xml \\ "name").text
@@ -232,7 +208,7 @@ trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXm
 
   // curl -X POST -H "Content-Type: application/vnd.acme.v1+xml" -d '<person><name>John Doe</name><age>25</age></person>' localhost:8080/person
   def personXmlV1EntityUnmarshaller(implicit mat: Materializer): FromEntityUnmarshaller[Person] =
-    Unmarshaller.byteStringUnmarshaller.forContentTypes(MediaVersionTypes.`application/vnd.acme.v1+xml`).mapWithCharset { (data, charset) ⇒
+    Unmarshaller.byteStringUnmarshaller.forContentTypes(MediaVersionTypes.`application/vnd.acme.v1+xml`).mapWithCharset { (data, charset) =>
       val input: String = if (charset == HttpCharsets.`UTF-8`) data.utf8String else data.decodeString(charset.nioCharset.name)
       val xml: Elem = XML.loadString(input)
       val name: String = (xml \\ "name").text
@@ -242,7 +218,7 @@ trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXm
 
   // curl -X POST -H "Content-Type: application/vnd.acme.v2+xml" -d '<person><name>John Doe</name><age>25</age><married>true</married></person>' localhost:8080/person
   def personXmlV2EntityUnmarshaller(implicit mat: Materializer): FromEntityUnmarshaller[Person] =
-    Unmarshaller.byteStringUnmarshaller.forContentTypes(MediaVersionTypes.`application/vnd.acme.v2+xml`).mapWithCharset { (data, charset) ⇒
+    Unmarshaller.byteStringUnmarshaller.forContentTypes(MediaVersionTypes.`application/vnd.acme.v2+xml`).mapWithCharset { (data, charset) =>
       val input: String = if (charset == HttpCharsets.`UTF-8`) data.utf8String else data.decodeString(charset.nioCharset.name)
       val xml: Elem = XML.loadString(input)
       val name: String = (xml \\ "name").text
@@ -253,7 +229,7 @@ trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXm
 
   // curl -X POST -H "Content-Type: application/json" -d '{"age": 25, "married": false, "name": "John Doe"}' localhost:8080/person
   def personJsonEntityUnmarshaller(implicit mat: Materializer): FromEntityUnmarshaller[Person] =
-    Unmarshaller.byteStringUnmarshaller.forContentTypes(MediaTypes.`application/json`).mapWithCharset { (data, charset) ⇒
+    Unmarshaller.byteStringUnmarshaller.forContentTypes(MediaTypes.`application/json`).mapWithCharset { (data, charset) =>
       val input: String = if (charset == HttpCharsets.`UTF-8`) data.utf8String else data.decodeString(charset.nioCharset.name)
       val tmp = input.parseJson.convertTo[PersonV2]
       Person(tmp.name, tmp.age, tmp.married)
@@ -261,7 +237,7 @@ trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXm
 
   // curl -X POST -H "Content-Type: application/vnd.acme.v1+json" -d '{"age": 25, "name": "John Doe"}' localhost:8080/person
   def personJsonV1EntityUnmarshaller(implicit mat: Materializer): FromEntityUnmarshaller[Person] =
-    Unmarshaller.byteStringUnmarshaller.forContentTypes(MediaVersionTypes.`application/vnd.acme.v1+json`).mapWithCharset { (data, charset) ⇒
+    Unmarshaller.byteStringUnmarshaller.forContentTypes(MediaVersionTypes.`application/vnd.acme.v1+json`).mapWithCharset { (data, charset) =>
       val input: String = if (charset == HttpCharsets.`UTF-8`) data.utf8String else data.decodeString(charset.nioCharset.name)
       val tmp = input.parseJson.convertTo[PersonV1]
       Person(tmp.name, tmp.age)
@@ -269,7 +245,7 @@ trait Marshallers extends DefaultJsonProtocol with SprayJsonSupport with ScalaXm
 
   // curl -X POST -H "Content-Type: application/vnd.acme.v2+json" -d '{"age": 25, "married": false, "name": "John Doe"}' localhost:8080/person
   def personJsonV2EntityUnmarshaller(implicit mat: Materializer): FromEntityUnmarshaller[Person] =
-    Unmarshaller.byteStringUnmarshaller.forContentTypes(MediaVersionTypes.`application/vnd.acme.v2+json`).mapWithCharset { (data, charset) ⇒
+    Unmarshaller.byteStringUnmarshaller.forContentTypes(MediaVersionTypes.`application/vnd.acme.v2+json`).mapWithCharset { (data, charset) =>
       val input: String = if (charset == HttpCharsets.`UTF-8`) data.utf8String else data.decodeString(charset.nioCharset.name)
       val tmp = input.parseJson.convertTo[PersonV2]
       Person(tmp.name, tmp.age, tmp.married)

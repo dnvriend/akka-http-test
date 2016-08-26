@@ -29,44 +29,44 @@ class IensClientTest extends TestSpec {
 
   "restaurantsByGeo" should "return a list of restaurants" in {
     IensClient().restaurantsByGeo(latitude, longitude, 1).futureValue mustBe {
-      case SearchRestaurantsResponse(true, "", head :: tail, _) ⇒
+      case SearchRestaurantsResponse(true, "", head :: tail, _) =>
     }
   }
 
   it should "find no restaurants for unknown lat/long" in {
     IensClient().restaurantsByGeo(90.0, 0.0, 1).futureValue mustBe {
-      case SearchRestaurantsResponse(true, "", Nil, 0) ⇒
+      case SearchRestaurantsResponse(true, "", Nil, 0) =>
     }
   }
 
   "restaurantdetails" should "return a restaurant for known id" in {
     IensClient().restaurantDetails(restaurantId).futureValue mustBe {
-      case GetRestaurantDetailsResponse(_, _, Some(RestaurantDetail("23091", _, _, _, _, _, _, _, _, _, _, _, _))) ⇒
+      case GetRestaurantDetailsResponse(_, _, Some(RestaurantDetail("23091", _, _, _, _, _, _, _, _, _, _, _, _))) =>
     }
   }
 
   it should "find no restaurant for unknown id" in {
     IensClient().restaurantDetails(-1).futureValue mustBe {
-      case GetRestaurantDetailsResponse(_, _, None) ⇒
+      case GetRestaurantDetailsResponse(_, _, None) =>
     }
   }
 
   "reviews" should "return a list of reviews" in {
     IensClient().reviews(restaurantId).futureValue mustBe {
-      case GetReviewResponse(_, _, head :: tail, _) ⇒
+      case GetReviewResponse(_, _, head :: tail, _) =>
     }
   }
 
   it should "return an empty list of reviews for an unknown restaurant id" in {
     IensClient().reviews(-1).futureValue mustBe {
-      case GetReviewResponse(_, _, Nil, "0") ⇒
+      case GetReviewResponse(_, _, Nil, "0") =>
     }
   }
 
   "Iens cached connection" should "get venues by geo" in {
-    Source((1 to 50).map(i ⇒ (LatLon(latitude, longitude), i)))
+    Source((1 to 50).map(i => (LatLon(latitude, longitude), i)))
       .via(IensClient().restaurantsByGeo)
-      .runFold(0) { case (c, e) ⇒ c + 1 }
+      .runFold(0) { case (c, e) => c + 1 }
       .futureValue shouldBe 50
   }
 }

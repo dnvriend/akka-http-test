@@ -39,13 +39,13 @@ class HttpClientTest extends TestSpec {
 
   "HttpClient.header" should "create a single http header" in {
     HttpClient.header("foo", "bar").value mustBe {
-      case HttpHeader("foo", "bar") ⇒
+      case HttpHeader("foo", "bar") =>
     }
   }
 
   it should "create a List[HttpHeader] from a Map[String, String]" in {
     HttpClient.headers(Map("foo" → "bar", "bar" → "baz")).sortBy(_.name()) mustBe {
-      case List(HttpHeader("bar", "baz"), HttpHeader("foo", "bar")) ⇒
+      case List(HttpHeader("bar", "baz"), HttpHeader("foo", "bar")) =>
     }
   }
 
@@ -87,11 +87,11 @@ class HttpClientTest extends TestSpec {
   def httpBinGet = HttpClient.mkRequest(RequestBuilding.Get, "/get")
 
   "Cached connection" should "non tls HTTP 200 for /get" in {
-    Source((1 to 10).map(i ⇒ (httpBinGet, i)))
+    Source((1 to 10).map(i => (httpBinGet, i)))
       .via(HttpClient.cachedConnection("httpbin.org", 80))
       .via(HttpClient.responseToString)
       .log("received")
-      .runFold(0) { case (c, e) ⇒ c + 1 }
+      .runFold(0) { case (c, e) => c + 1 }
       .futureValue shouldBe 10
   }
 }

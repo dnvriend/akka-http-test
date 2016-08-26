@@ -70,7 +70,7 @@ object IensClient {
 
   def restaurantsByGeoRequestFlow[T]: Flow[(LatLon, T), (HttpRequest, T), NotUsed] =
     Flow[(LatLon, T)].map {
-      case (LatLon(lat, lon), id) ⇒
+      case (LatLon(lat, lon), id) =>
         val requestParams = Map(
           "id" → "searchrestaurants",
           "limit" → "1",
@@ -83,27 +83,27 @@ object IensClient {
 
   def asSearchRestaurantsResponseFlow[A](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[SearchRestaurantsResponse]): Flow[(Try[HttpResponse], A), (Try[SearchRestaurantsResponse], A), NotUsed] =
     HttpClient.responseToString[A].map {
-      case (json, id) ⇒ (Try(json.parseJson.convertTo[SearchRestaurantsResponse]), id)
+      case (json, id) => (Try(json.parseJson.convertTo[SearchRestaurantsResponse]), id)
     }
 
   def restaurantDetailsRequestFlow[T]: Flow[(Long, T), (HttpRequest, T), NotUsed] =
     Flow[(Long, T)].map {
-      case (vendorId, id) ⇒ (HttpClient.mkGetRequest("/rest/restaurant", queryParamsMap = Map("id" → "getrestaurantdetails", "restaurant_id" → vendorId.toString)), id)
+      case (vendorId, id) => (HttpClient.mkGetRequest("/rest/restaurant", queryParamsMap = Map("id" → "getrestaurantdetails", "restaurant_id" → vendorId.toString)), id)
     }
 
   def asGetRestaurantDetailsResponseFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[GetRestaurantDetailsResponse]): Flow[(Try[HttpResponse], T), (Try[GetRestaurantDetailsResponse], T), NotUsed] =
     HttpClient.responseToString[T].map {
-      case (json, id) ⇒ (Try(json.parseJson.convertTo[GetRestaurantDetailsResponse]), id)
+      case (json, id) => (Try(json.parseJson.convertTo[GetRestaurantDetailsResponse]), id)
     }
 
   def reviewsRequestFlow[T]: Flow[(Long, T), (HttpRequest, T), NotUsed] =
     Flow[(Long, T)].map {
-      case (vendorId, id) ⇒ (HttpClient.mkGetRequest("/rest/review", queryParamsMap = Map("restaurant_id" → id.toString)), id)
+      case (vendorId, id) => (HttpClient.mkGetRequest("/rest/review", queryParamsMap = Map("restaurant_id" → id.toString)), id)
     }
 
   def asGetReviewResponseFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[GetReviewResponse]): Flow[(Try[HttpResponse], T), (Try[GetReviewResponse], T), NotUsed] =
     HttpClient.responseToString[T].map {
-      case (json, id) ⇒ (Try(json.parseJson.convertTo[GetReviewResponse]), id)
+      case (json, id) => (Try(json.parseJson.convertTo[GetReviewResponse]), id)
     }
 }
 

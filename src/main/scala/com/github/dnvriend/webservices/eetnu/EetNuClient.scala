@@ -97,9 +97,9 @@ object EetNuClient {
   val ZipcodeWithoutSpacePattern: Regex = """([1-9][0-9]{3})([A-Za-z]{2})""".r
   val ZipcodeWithSpacePattern: Regex = """([1-9][0-9]{3})[\s]([A-Za-z]{2})""".r
   def normalizeZipcode(zipcode: String): Option[String] = zipcode.toUpperCase match {
-    case ZipcodeWithoutSpacePattern(numbers, letters) ⇒ Option(s"$numbers $letters")
-    case ZipcodeWithSpacePattern(numbers, letters)    ⇒ Option(s"$numbers $letters")
-    case _                                            ⇒ None
+    case ZipcodeWithoutSpacePattern(numbers, letters) => Option(s"$numbers $letters")
+    case ZipcodeWithSpacePattern(numbers, letters)    => Option(s"$numbers $letters")
+    case _                                            => None
   }
 
   def responseToString(resp: HttpResponse)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Future[String] =
@@ -109,13 +109,13 @@ object EetNuClient {
     json.parseJson.convertTo[Venues]
 
   def asVenuesFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[Venues]): Flow[(Try[HttpResponse], T), (Option[Venues], T), NotUsed] =
-    HttpClient.responseToString[T].map { case (json, id) ⇒ (Try(json.parseJson.convertTo[Venues]).toOption, id) }
+    HttpClient.responseToString[T].map { case (json, id) => (Try(json.parseJson.convertTo[Venues]).toOption, id) }
 
   def asVenueFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(Option[Venues], T), (List[Venue], T), NotUsed] =
-    Flow[(Option[Venues], T)].map { case (venues, id) ⇒ (venues.map(_.results).getOrElse(Nil), id) }
+    Flow[(Option[Venues], T)].map { case (venues, id) => (venues.map(_.results).getOrElse(Nil), id) }
 
   def responseToVenueFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[Venue]): Flow[(Try[HttpResponse], T), (Option[Venue], T), NotUsed] =
-    HttpClient.responseToString[T].map { case (json, id) ⇒ (Try(json.parseJson.convertTo[Venue]).toOption, id) }
+    HttpClient.responseToString[T].map { case (json, id) => (Try(json.parseJson.convertTo[Venue]).toOption, id) }
 
   def asVenue(json: String)(implicit reader: JsonReader[Venue]): Option[Venue] =
     Try(json.parseJson.convertTo[Venue]).toOption
@@ -126,19 +126,19 @@ object EetNuClient {
   def apply()(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, log: LoggingAdapter) = new EetNuClientImpl
 
   def venuesByQueryRequestFlow[T]: Flow[(String, T), (HttpRequest, T), NotUsed] =
-    Flow[(String, T)].map { case (query, id) ⇒ (HttpClient.mkGetRequest("/venues", "", Map("query" → query)), id) }
+    Flow[(String, T)].map { case (query, id) => (HttpClient.mkGetRequest("/venues", "", Map("query" → query)), id) }
 
   def venueByIdRequestFlow[T]: Flow[(String, T), (HttpRequest, T), NotUsed] =
-    Flow[(String, T)].map { case (vendorId, id) ⇒ (HttpClient.mkGetRequest(s"/venues/$vendorId"), id) }
+    Flow[(String, T)].map { case (vendorId, id) => (HttpClient.mkGetRequest(s"/venues/$vendorId"), id) }
 
   def venuesByGeoRequestFlow[T]: Flow[(LatLon, T), (HttpRequest, T), NotUsed] =
-    Flow[(LatLon, T)].map { case (LatLon(lat, lon), id) ⇒ (HttpClient.mkGetRequest("/venues", "", Map("geolocation" → s"$lat,$lon")), id) }
+    Flow[(LatLon, T)].map { case (LatLon(lat, lon), id) => (HttpClient.mkGetRequest("/venues", "", Map("geolocation" → s"$lat,$lon")), id) }
 
   def reviewsByVenueIdRequestFlow[T]: Flow[(String, T), (HttpRequest, T), NotUsed] =
-    Flow[(String, T)].map { case (vendorId, id) ⇒ (HttpClient.mkGetRequest(s"/venues/$vendorId/reviews"), id) }
+    Flow[(String, T)].map { case (vendorId, id) => (HttpClient.mkGetRequest(s"/venues/$vendorId/reviews"), id) }
 
   def asReviewsFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[Reviews]): Flow[(Try[HttpResponse], T), (List[Review], T), NotUsed] =
-    HttpClient.responseToString[T].map { case (json, id) ⇒ (Try(asReviews(json).results).toOption.getOrElse(Nil), id) }
+    HttpClient.responseToString[T].map { case (json, id) => (Try(asReviews(json).results).toOption.getOrElse(Nil), id) }
 }
 
 class EetNuClientImpl()(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, log: LoggingAdapter) extends EetNuClient with Marshallers {
@@ -148,8 +148,8 @@ class EetNuClientImpl()(implicit system: ActorSystem, mat: Materializer, ec: Exe
 
   override def venuesByZipcode(zipcode: String): Future[List[Venue]] =
     normalizeZipcode(zipcode) match {
-      case Some(zip) ⇒ venuesByQuery(zip)
-      case None      ⇒ Future.successful(Nil)
+      case Some(zip) => venuesByQuery(zip)
+      case None      => Future.successful(Nil)
     }
 
   override def venuesByGeo(lat: String, lon: String): Future[List[Venue]] =
@@ -182,8 +182,8 @@ class EetNuClientImpl()(implicit system: ActorSystem, mat: Materializer, ec: Exe
 
   override def venuesByZipcode[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(String, T), (List[Venue], T), NotUsed] =
     Flow[(String, T)]
-      .map { case (zip, id) ⇒ (normalizeZipcode(zip), id) }
-      .collect { case (Some(zip), id) ⇒ (zip, id) } // drop elements that are no valid zipcodes (no use for them)
+      .map { case (zip, id) => (normalizeZipcode(zip), id) }
+      .collect { case (Some(zip), id) => (zip, id) } // drop elements that are no valid zipcodes (no use for them)
       .via(venuesByQueryRequestFlow[T])
       .via(client.cachedHostConnectionFlow[T])
       .via(asVenuesFlow[T])

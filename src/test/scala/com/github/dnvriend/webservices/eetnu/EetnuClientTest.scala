@@ -47,31 +47,31 @@ class EetnuClientTest extends TestSpec {
           "The Netherlands"
           ),
         "regular", // plan
-        Images(List())) ⇒
+        Images(List())) =>
     }
   }
 
   it should "get teddy by geo" in {
     EetNuClient().venuesByGeo("52.3817809", "5.1991995").futureValue.headOption mustBe {
-      case Some(Venue(1770, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)) ⇒
+      case Some(Venue(1770, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)) =>
     }
   }
 
   it should "Get Teddy venue by query on zipcode with space" in {
     EetNuClient().venuesByQuery("1313 EG").futureValue.headOption mustBe {
-      case Some(Venue(1770, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)) ⇒
+      case Some(Venue(1770, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)) =>
     }
   }
 
   it should "Get Teddy venue on lowercase zipcode with space" in {
     EetNuClient().venuesByQuery("1313 eg").futureValue.headOption mustBe {
-      case Some(Venue(1770, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)) ⇒
+      case Some(Venue(1770, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)) =>
     }
   }
 
   it should "Get no venue on trimmed zipcode" in {
     EetNuClient().venuesByQuery("1313EG").futureValue.headOption mustBe {
-      case None ⇒
+      case None =>
     }
   }
 
@@ -99,7 +99,7 @@ class EetnuClientTest extends TestSpec {
           "The Netherlands"
           ),
         _, // plan
-        Images(List())) ⇒
+        Images(List())) =>
     }
   }
 
@@ -113,19 +113,19 @@ class EetnuClientTest extends TestSpec {
 
   "VenuesByZipcode" should "return teddy for zipcode with space" in {
     EetNuClient().venuesByZipcode("1313 EG").futureValue.headOption mustBe {
-      case Some(Venue(1770, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)) ⇒
+      case Some(Venue(1770, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)) =>
     }
   }
 
   it should "return teddy for zipcode without space" in {
     EetNuClient().venuesByZipcode("1313EG").futureValue.headOption mustBe {
-      case Some(Venue(1770, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)) ⇒
+      case Some(Venue(1770, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)) =>
     }
   }
 
   it should "return None for an invalid zipcode" in {
     EetNuClient().venuesByQuery("0000AA").futureValue.headOption mustBe {
-      case None ⇒
+      case None =>
     }
   }
 
@@ -151,23 +151,23 @@ class EetnuClientTest extends TestSpec {
   }
 
   "Eetnu cached connection" should "get venues by zipcode" in {
-    Source((1 to 10).map(i ⇒ ("1313 EG", i)))
+    Source((1 to 10).map(i => ("1313 EG", i)))
       .via(EetNuClient().venuesByZipcode)
-      .runFold(0) { case (c, e) ⇒ c + 1 }
+      .runFold(0) { case (c, e) => c + 1 }
       .futureValue shouldBe 10
   }
 
   it should "get venues by geo" in {
-    Source((1 to 10).map(i ⇒ (LatLon(52.3817809, 5.1991995), i)))
+    Source((1 to 10).map(i => (LatLon(52.3817809, 5.1991995), i)))
       .via(EetNuClient().venuesByGeo)
-      .runFold(0) { case (c, e) ⇒ c + 1 }
+      .runFold(0) { case (c, e) => c + 1 }
       .futureValue shouldBe 10
   }
 
   it should "not send requests for invalid zipcodes" in {
-    Source((1 to 50).map(i ⇒ ("0000AA", i)))
+    Source((1 to 50).map(i => ("0000AA", i)))
       .via(EetNuClient().venuesByZipcode)
-      .runFold(0) { case (c, e) ⇒ c + 1 }
+      .runFold(0) { case (c, e) => c + 1 }
       .futureValue shouldBe 0
   }
 }

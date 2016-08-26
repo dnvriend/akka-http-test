@@ -48,7 +48,7 @@ SbtScalariform.autoImport.scalariformPreferences := SbtScalariform.autoImport.sc
 // enable sbt-revolver
 Revolver.settings ++ Seq(
   Revolver.enableDebugging(port = 5050, suspend = false),
-  mainClass in reStart := Some("com.github.dnvriend.HighLevelServer")
+  mainClass in reStart := Some("com.github.dnvriend.SimpleServer")
 )
 
 // enable plugins //

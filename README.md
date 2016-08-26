@@ -227,22 +227,31 @@ When you run the example, you can try the following requests:
 ```bash
 # The latest version in JSON
 curl -H "Accept: application/json" localhost:8080/person
+http :8080/person
 # A stream of persons in CSV
 curl -H "Accept: text/csv" localhost:8080/persons/stream/100
+http :8080/persons/stream/100 Accept:text/csv
 # A stream of persons in JSON
 curl -H "Accept: application/json" localhost:8080/persons/stream/100
+http :8080/persons/stream/100 Accept:application/json
 # A list of of persons in JSON
 curl -H "Accept: application/json" localhost:8080/persons/strict/100
+http :8080/persons/strict/100 Accept:application/json
 # The latest version in XML
 curl -H "Accept: application/xml" localhost:8080/person
+http :8080/person Accept:application/xml
 # Vendor specific header for JSON v1
 curl -H "Accept: application/vnd.acme.v1+json" localhost:8080/person
+http :8080/person Accept:application/vnd.acme.v1+json
 # Vendor specific header for JSON v2
 curl -H "Accept: application/vnd.acme.v2+json" localhost:8080/person
+http :8080/person Accept:application/vnd.acme.v2+json
 # Vendor specific header for XML v1
 curl -H "Accept: application/vnd.acme.v1+xml" localhost:8080/person
+http :8080/person Accept:application/vnd.acme.v2+json
 # Vendor specific header for XML v2
 curl -H "Accept: application/vnd.acme.v2+xml" localhost:8080/person
+http :8080/person Accept:application/vnd.acme.v2+xml
 ```
 
 Please take a look at the [Marshallers](https://github.com/dnvriend/akka-http-test/blob/master/src/main/scala/com/github/dnvriend/Marshallers.scala)

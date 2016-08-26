@@ -73,10 +73,10 @@ object PostcodeClient {
     HttpClient.responseToString(resp)
 
   def getAddressRequestFlow[T]: Flow[(GetAddressRequest, T), (HttpRequest, T), NotUsed] =
-    Flow[(GetAddressRequest, T)].map { case (request, id) ⇒ (HttpClient.mkGetRequest(s"/rest/addresses/${request.zip}/${request.houseNumber}/"), id) }
+    Flow[(GetAddressRequest, T)].map { case (request, id) => (HttpClient.mkGetRequest(s"/rest/addresses/${request.zip}/${request.houseNumber}/"), id) }
 
   def mapResponseToAddressFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[Address]): Flow[(Try[HttpResponse], T), (Option[Address], T), NotUsed] =
-    HttpClient.responseToString[T].map { case (json, id) ⇒ (mapToAddress(json), id) }
+    HttpClient.responseToString[T].map { case (json, id) => (mapToAddress(json), id) }
   /**
    * Returns an option of the zipcode without spaces, if there were any. Any invalid zipcode
    * will be returned as None
@@ -85,9 +85,9 @@ object PostcodeClient {
    * @return
    */
   def normalizeZipcode(zipcode: String): Option[String] = zipcode.toUpperCase match {
-    case ZipcodeWithoutSpacePattern(numbers, letters) ⇒ Option(s"$numbers$letters")
-    case ZipcodeWithSpacePattern(numbers, letters)    ⇒ Option(s"$numbers$letters")
-    case _                                            ⇒ None
+    case ZipcodeWithoutSpacePattern(numbers, letters) => Option(s"$numbers$letters")
+    case ZipcodeWithSpacePattern(numbers, letters)    => Option(s"$numbers$letters")
+    case _                                            => None
   }
 
   def apply()(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, log: LoggingAdapter) = new PostcodeClientImpl
@@ -99,9 +99,9 @@ class PostcodeClientImpl()(implicit val system: ActorSystem, val mat: Materializ
 
   override def address(postcode: String, houseNumber: Int): Future[Option[Address]] =
     normalizeZipcode(postcode) match {
-      case Some(zip) ⇒ client.get(s"/rest/addresses/$zip/$houseNumber/")
+      case Some(zip) => client.get(s"/rest/addresses/$zip/$houseNumber/")
         .flatMap(responseToString).map(mapToAddress)
-      case None ⇒ Future.successful(None)
+      case None => Future.successful(None)
     }
 
   override def address[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(GetAddressRequest, T), (Option[Address], T), NotUsed] =

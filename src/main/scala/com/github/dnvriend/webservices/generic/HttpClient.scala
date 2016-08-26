@@ -79,38 +79,38 @@ object HttpClient {
   def encode(value: String): String = URLEncoder.encode(value, "UTF-8")
 
   def responseToString(response: HttpResponse)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Future[String] = response.status match {
-    //    case StatusCodes.OK       ⇒ Unmarshal(response.entity).to[String]
-    //    case StatusCodes.NotFound ⇒ Unmarshal(response.entity).to[String]
-    case status ⇒ Unmarshal(response.entity).to[String]
+    //    case StatusCodes.OK       => Unmarshal(response.entity).to[String]
+    //    case StatusCodes.NotFound => Unmarshal(response.entity).to[String]
+    case status => Unmarshal(response.entity).to[String]
   }
 
   def responseToString[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(Try[HttpResponse], T), (String, T), NotUsed] =
     Flow[(Try[HttpResponse], T)].mapAsync(1) {
-      case (Failure(t), e)    ⇒ Future.failed(t)
-      case (Success(resp), e) ⇒ responseToString(resp).map(str ⇒ (str, e))
+      case (Failure(t), e)    => Future.failed(t)
+      case (Success(resp), e) => responseToString(resp).map(str => (str, e))
     }
 
   def queryString(queryParams: Map[String, String]): String =
     if (queryParams.nonEmpty)
       "?" + queryParams
         .filterNot {
-          case (key, value) ⇒ key.length == 0
+          case (key, value) => key.length == 0
         }.mapValues(encode)
         .toList
         .map {
-          case (key, value) ⇒ s"$key=$value"
+          case (key, value) => s"$key=$value"
         }.mkString("&")
     else ""
 
   def header(key: String, value: String): Option[HttpHeader] =
     HttpHeader.parse(key, value) match {
-      case ParsingResult.Ok(header, errors) ⇒ Option(header)
-      case _                                ⇒ None
+      case ParsingResult.Ok(header, errors) => Option(header)
+      case _                                => None
     }
 
   def headers(headersMap: Map[String, String]): List[HttpHeader] =
     headersMap.flatMap {
-      case (key, value) ⇒ header(key, value)
+      case (key, value) => header(key, value)
     }.toList
 
   /**
@@ -151,7 +151,7 @@ object HttpClient {
 
   def cachedConnectionPipeline[T](config: HttpClientConfig)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Flow[(HttpRequest, T), (Try[HttpResponse], T), NotUsed] =
     Flow[(HttpRequest, T)].mapAsync(1) {
-      case (request, id) ⇒ addCredentials(config)(request).map(req ⇒ (req, id))
+      case (request, id) => addCredentials(config)(request).map(req => (req, id))
     }.via(cachedConnection(config))
 
   def singleRequestPipeline(request: HttpRequest, config: HttpClientConfig)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Future[HttpResponse] =
@@ -160,27 +160,27 @@ object HttpClient {
       .via(connection(config))
       .runWith(Sink.head)
 
-  def basicAuthenticationCredentials(username: String, password: String)(implicit ec: ExecutionContext): HttpRequest ⇒ Future[HttpRequest] = { request ⇒
+  def basicAuthenticationCredentials(username: String, password: String)(implicit ec: ExecutionContext): HttpRequest => Future[HttpRequest] = { request =>
     Future.successful(RequestBuilding.addCredentials(BasicHttpCredentials(username, password))(request))
   }
 
-  def oneLeggedOAuth1Credentials(uri: String, consumerKey: String, consumerSecret: String, tls: Boolean, host: String)(implicit ec: ExecutionContext): HttpRequest ⇒ Future[HttpRequest] = { request ⇒
+  def oneLeggedOAuth1Credentials(uri: String, consumerKey: String, consumerSecret: String, tls: Boolean, host: String)(implicit ec: ExecutionContext): HttpRequest => Future[HttpRequest] = { request =>
     val scheme: String = if (tls) "https" else "http"
     def consumerService = new DefaultConsumerService(ec)
     // please note that the used URL (and request params) must be the same as the request we send the request to!!
     def koAuthRequest(url: String) = KoauthRequest("GET", url, None, None)
     def oAuthHeader(uri: String): Future[RequestWithInfo] = consumerService.createOauthenticatedRequest(koAuthRequest(s"$scheme://$host$uri"), consumerKey, consumerSecret, "", "")
-    oAuthHeader(uri).map { oauth ⇒
+    oAuthHeader(uri).map { oauth =>
       request.addHeader(header("Authorization", oauth.header).orNull)
     }
   }
 
   private def addCredentials(config: HttpClientConfig)(request: HttpRequest)(implicit ec: ExecutionContext): Future[HttpRequest] = config match {
-    case HttpClientConfig(_, _, _, Some(username), Some(password), None, None) ⇒
+    case HttpClientConfig(_, _, _, Some(username), Some(password), None, None) =>
       basicAuthenticationCredentials(username, password)(ec)(request)
-    case HttpClientConfig(_, _, _, None, None, Some(consumerKey), Some(consumerSecret)) ⇒
+    case HttpClientConfig(_, _, _, None, None, Some(consumerKey), Some(consumerSecret)) =>
       oneLeggedOAuth1Credentials(request.uri.toString(), consumerKey, consumerSecret, config.tls, config.host)(ec)(request)
-    case _ ⇒ Future.successful(request)
+    case _ => Future.successful(request)
   }
 
   def mkEntity(body: String): HttpEntity.Strict = HttpEntity(ContentTypes.`application/json`, body)

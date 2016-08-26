@@ -65,10 +65,10 @@ object OpenWeatherApi {
     HttpClient.responseToString(resp)
 
   def getWeatherRequestFlow[T]: Flow[(GetWeatherRequest, T), (HttpRequest, T), NotUsed] =
-    Flow[(GetWeatherRequest, T)].map { case (request, id) ⇒ (HttpClient.mkGetRequest(s"/data/2.5/weather?zip=${request.zip},${request.country}"), id) }
+    Flow[(GetWeatherRequest, T)].map { case (request, id) => (HttpClient.mkGetRequest(s"/data/2.5/weather?zip=${request.zip},${request.country}"), id) }
 
   def mapResponseToWeatherResultFlow[T](implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, reader: JsonReader[WeatherResult]): Flow[(Try[HttpResponse], T), (Option[WeatherResult], T), NotUsed] =
-    HttpClient.responseToString[T].map { case (json, id) ⇒ (mapResponseToWeatherResult(json), id) }
+    HttpClient.responseToString[T].map { case (json, id) => (mapResponseToWeatherResult(json), id) }
 }
 
 class OpenWeatherApiImpl()(implicit val system: ActorSystem, val ec: ExecutionContext, val mat: Materializer, val log: LoggingAdapter) extends OpenWeatherApi with Marshallers {

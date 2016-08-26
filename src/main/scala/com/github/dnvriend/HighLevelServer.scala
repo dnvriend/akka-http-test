@@ -36,7 +36,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 // see: akka.http.scaladsl.marshalling.ToResponseMarshallable
 // see: akka.http.scaladsl.marshalling.PredefinedToResponseMarshallers
-object Route extends Directives {
+object RestRoute extends Directives {
   def routes(personDb: ActorRef)(implicit timeout: Timeout, trmSingle: ToResponseMarshaller[PersonWithId], trmList: ToResponseMarshaller[List[PersonWithId]], fru: FromRequestUnmarshaller[Person]): Route = {
     pathEndOrSingleSlash {
       redirect(Uri("/api/person"), StatusCodes.PermanentRedirect)
@@ -94,5 +94,5 @@ object HighLevelServer extends App with SprayJsonSupport with DefaultJsonProtoco
 
   val serverSource: Source[Http.IncomingConnection, Future[Http.ServerBinding]] =
     Http().bind(interface = "localhost", port = 8080)
-  val binding: Future[Http.ServerBinding] = serverSource.to(Sink.foreach(_.handleWith(Route.routes(personDb)))).run
+  val binding: Future[Http.ServerBinding] = serverSource.to(Sink.foreach(_.handleWith(RestRoute.routes(personDb)))).run
 }

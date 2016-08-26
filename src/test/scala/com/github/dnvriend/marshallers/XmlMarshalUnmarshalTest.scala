@@ -34,17 +34,17 @@ class XmlMarshalUnmarshalTest extends TestSpec {
       <age>25</age>
     </person>
 
-  implicit val personUnmarshaller = Unmarshaller.strict[NodeSeq, Person] { xml ⇒
+  implicit val personUnmarshaller = Unmarshaller.strict[NodeSeq, Person] { xml =>
     Person((xml \\ "name").text, (xml \\ "age").text.toInt)
   }
 
-  val opaquePersonMarshalling = Marshalling.Opaque(() ⇒ personXml)
-  val openCharsetPersonMarshalling = Marshalling.WithOpenCharset(`text/xml`, (charset: HttpCharset) ⇒ personXml)
-  val fixedCharsetPersonMarshalling = Marshalling.WithFixedContentType(ContentTypes.`text/xml(UTF-8)`, () ⇒ personXml)
+  val opaquePersonMarshalling = Marshalling.Opaque(() => personXml)
+  val openCharsetPersonMarshalling = Marshalling.WithOpenCharset(`text/xml`, (charset: HttpCharset) => personXml)
+  val fixedCharsetPersonMarshalling = Marshalling.WithFixedContentType(ContentTypes.`text/xml(UTF-8)`, () => personXml)
 
-  val opaquePersonMarshaller = Marshaller.opaque[Person, NodeSeq] { person ⇒ personXml }
-  val withFixedCharsetPersonMarshaller = Marshaller.withFixedContentType[Person, NodeSeq](ContentTypes.`text/xml(UTF-8)`) { person ⇒ personXml }
-  val withOpenCharsetCharsetPersonMarshaller = Marshaller.withOpenCharset[Person, NodeSeq](`text/xml`) { (person, charset) ⇒ personXml }
+  val opaquePersonMarshaller = Marshaller.opaque[Person, NodeSeq] { person => personXml }
+  val withFixedCharsetPersonMarshaller = Marshaller.withFixedContentType[Person, NodeSeq](ContentTypes.`text/xml(UTF-8)`) { person => personXml }
+  val withOpenCharsetCharsetPersonMarshaller = Marshaller.withOpenCharset[Person, NodeSeq](`text/xml`) { (person, charset) => personXml }
 
   implicit val personMarshaller = Marshaller.oneOf[Person, NodeSeq](opaquePersonMarshaller, withFixedCharsetPersonMarshaller, withOpenCharsetCharsetPersonMarshaller)
 
