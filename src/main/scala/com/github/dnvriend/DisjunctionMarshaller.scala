@@ -39,24 +39,24 @@ trait DisjunctionMarshaller {
     }
   }
 
-  implicit def errorDisjunctionMarshaller[A](implicit writer: JsonWriter[A]): ToResponseMarshaller[Disjunction[NonEmptyList[String], A]] =
+  implicit def errorDisjunctionMarshaller[A](implicit w1: JsonWriter[A], w2: JsonWriter[List[String]]): ToResponseMarshaller[Disjunction[NonEmptyList[String], A]] =
     Marshaller.withFixedContentType(MediaTypes.`application/json`) {
       case -\/(errors) => HttpResponse(
         status = StatusCodes.BadRequest,
-        entity = HttpEntity(ContentType(MediaTypes.`application/json`), errors.toList.mkString(", "))
+        entity = HttpEntity(ContentType(MediaTypes.`application/json`), w2.write(errors.toList).compactPrint)
       )
-      case \/-(success) => HttpResponse(entity = HttpEntity(ContentType(MediaTypes.`application/json`), writer.write(success).compactPrint))
+      case \/-(success) => HttpResponse(entity = HttpEntity(ContentType(MediaTypes.`application/json`), w1.write(success).compactPrint))
     }
 
-  implicit def errorMessageDisjunctionMarshaller[A <: ErrorMessage, B](implicit writer: JsonWriter[B]): ToResponseMarshaller[Disjunction[NonEmptyList[A], B]] = {
+  implicit def errorMessageDisjunctionMarshaller[A <: ErrorMessage, B](implicit w1: JsonWriter[B], w2: JsonWriter[List[String]]): ToResponseMarshaller[Disjunction[NonEmptyList[A], B]] = {
     def createResponseWithStatusCode(code: StatusCode, errors: List[ErrorMessage]) = HttpResponse(
       status = code,
-      entity = HttpEntity(ContentType(MediaTypes.`application/json`), errors.map(_.description).mkString(", "))
+      entity = HttpEntity(ContentType(MediaTypes.`application/json`), w2.write(errors.map(_.description)).compactPrint)
     )
     Marshaller.withFixedContentType(MediaTypes.`application/json`) {
       case -\/(errors) if errors.toList.exists(_.isInstanceOf[FatalError]) => createResponseWithStatusCode(StatusCodes.InternalServerError, errors.toList)
       case -\/(errors)                                                     => createResponseWithStatusCode(StatusCodes.BadRequest, errors.toList)
-      case \/-(success)                                                    => HttpResponse(entity = HttpEntity(ContentType(MediaTypes.`application/json`), writer.write(success).compactPrint))
+      case \/-(success)                                                    => HttpResponse(entity = HttpEntity(ContentType(MediaTypes.`application/json`), w1.write(success).compactPrint))
     }
   }
 }
