@@ -29,11 +29,13 @@ import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
 import akka.stream.scaladsl.{ Flow, Source }
 import akka.stream.{ ActorMaterializer, Materializer }
 import akka.util.ByteString
+import com.github.dnvriend.DisjunctionMarshaller.{ ErrorMessage, FatalError, NonFatalError }
 import com.github.dnvriend.domain.Person
 import com.github.dnvriend.util.TimeUtil
 import spray.json.DefaultJsonProtocol
 
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.Try
 
 class PersonDao {
   def persons(numberOfPersons: Int): Source[Person, NotUsed] =
@@ -98,6 +100,56 @@ object JsonStreamingRoute extends Directives with SprayJsonSupport with DefaultJ
     }
 }
 
+object SimpleDisjunctionRoute extends Directives with SprayJsonSupport with DefaultJsonProtocol with DisjunctionMarshaller {
+  import scalaz._
+  import Scalaz._
+  final case class MyFatalError(description: String) extends FatalError
+  final case class MyNonFatalError(description: String) extends NonFatalError
+  final case class Order(id: Long, name: String)
+
+  implicit val orderJsonFormat = jsonFormat2(Order)
+
+  def route: Route =
+    pathPrefix("disjunction" / "simple") {
+      (get & path("failure")) {
+        complete("failure-left".left[String])
+      } ~
+        (get & path("success")) {
+          complete("success-right".right[String])
+        }
+    } ~
+      pathPrefix("disjunction" / "nel") {
+        (get & path("string" / "failure")) {
+          complete(("failure1".failureNel[String] *> "failure2".failureNel[String]).disjunction)
+        } ~
+          (get & path("nonfatal" / "failure")) {
+            complete((MyNonFatalError("my-non-fatal-error-1").failureNel[Order] *> MyNonFatalError("my-non-fatal-error-2").failureNel[Order]).disjunction)
+          } ~
+          (get & path("fatal" / "failure")) {
+            complete((MyFatalError("my-fatal-error-1").failureNel[Order] *> MyFatalError("my-fatal-error-2").failureNel[Order]).disjunction)
+          } ~
+          (get & path("combined" / "failure")) {
+            complete((Validation.failureNel[ErrorMessage, Order](MyFatalError("my-fatal-error-1")) *> Validation.failureNel[ErrorMessage, Order](MyNonFatalError("my-non-fatal-error-1"))).disjunction)
+          } ~
+          (get & path("nonfatal" / "success")) {
+            complete(Order(1, "test-order").successNel[ErrorMessage].disjunction)
+          }
+      }
+}
+
+object TryRoute extends Directives with SprayJsonSupport with DefaultJsonProtocol {
+  def route: Route = {
+    pathPrefix("try") {
+      (get & path("failure")) {
+        complete(Try((1 / 0).toString))
+      } ~
+        (get & path("success")) {
+          complete(Try(1.toString))
+        }
+    }
+  }
+}
+
 object SimpleServerRestRoutes extends Directives {
   def routes(dao: PersonDao)(implicit
     um1: FromRequestUnmarshaller[Person],
@@ -134,11 +186,9 @@ object SimpleServerRestRoutes extends Directives {
             }
           }
         } ~ JsonStreamingRoute.route(dao) ~ CsvStreamingRoute.route(dao)
-      } ~ pathPrefix("ping") {
-        get {
-          complete(Ping(TimeUtil.timestamp))
-        }
-      }
+      } ~ (get & pathPrefix("ping")) {
+        complete(Ping(TimeUtil.timestamp))
+      } ~ SimpleDisjunctionRoute.route ~ TryRoute.route
     }
 }
 
