@@ -90,17 +90,19 @@ object JsonStreamingRoute extends Directives with SprayJsonSupport with DefaultJ
     .withFramingRenderer(Flow[ByteString].intersperse(start, sep, end))
     .withParallelMarshalling(parallelism = 8, unordered = true)
 
-  def route(dao: PersonDao): Route =
+  def route(dao: PersonDao)(implicit log: LoggingAdapter, mat: Materializer, ec: ExecutionContext): Route =
     path("stream" / IntNumber) { numberOfPersons =>
-      pathEnd {
-        get {
-          complete(dao.persons(numberOfPersons))
-        }
+      (get & pathEnd) {
+        complete(dao.persons(numberOfPersons))
       }
-    }
+    } ~
+      (post & path("stream") & entity(asSourceOf[Person])) { people =>
+        val total = people.log("people").runFold(0) { case (c, _) => c + 1 }
+        complete(total.map(n => s"Received $n number of person"))
+      }
 }
 
-object SimpleDisjunctionRoute extends Directives with SprayJsonSupport with DefaultJsonProtocol with DisjunctionMarshaller {
+object SimpleDisjunctionRoute extends Directives with SprayJsonSupport with DefaultJsonProtocol with DisjunctionMarshaller with ValidationMarshaller {
   import scalaz._
   import Scalaz._
   final case class MyFatalError(description: String) extends FatalError
@@ -134,6 +136,14 @@ object SimpleDisjunctionRoute extends Directives with SprayJsonSupport with Defa
           (get & path("nonfatal" / "success")) {
             complete(Order(1, "test-order").successNel[ErrorMessage].disjunction)
           }
+      } ~
+      pathPrefix("validation") {
+        (get & path("failure")) {
+          complete("failure".failureNel[String])
+        } ~
+          (get & path("success")) {
+            complete("success".successNel[String])
+          }
       }
 }
 
@@ -150,14 +160,8 @@ object TryRoute extends Directives with SprayJsonSupport with DefaultJsonProtoco
   }
 }
 
-object SimpleServerRestRoutes extends Directives {
-  def routes(dao: PersonDao)(implicit
-    um1: FromRequestUnmarshaller[Person],
-    m1: ToResponseMarshaller[Person],
-    m3: ToResponseMarshaller[Seq[Person]],
-    m4: ToResponseMarshaller[Ping],
-    log: LoggingAdapter): Route =
-
+object SimpleServerRestRoutes extends Directives with Marshallers {
+  def routes(dao: PersonDao)(implicit log: LoggingAdapter, mat: Materializer, ec: ExecutionContext): Route =
     logRequestResult("akka-http-test") {
       pathPrefix("person") {
         path("sync") {
@@ -202,6 +206,5 @@ object SimpleServer extends App {
     system.terminate()
   }
 
-  import Marshallers._
   Http().bindAndHandle(SimpleServerRestRoutes.routes(new PersonDao), "0.0.0.0", 8080)
 }

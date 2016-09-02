@@ -31,6 +31,7 @@ object DisjunctionMarshaller {
 }
 
 trait DisjunctionMarshaller {
+  type DisjunctionNel[A, +B] = Disjunction[NonEmptyList[A], B]
 
   implicit def disjunctionMarshaller[A1, A2, B](implicit m1: Marshaller[A1, B], m2: Marshaller[A2, B]): Marshaller[Disjunction[A1, A2], B] = Marshaller { implicit ec =>
     {
@@ -39,7 +40,7 @@ trait DisjunctionMarshaller {
     }
   }
 
-  implicit def errorDisjunctionMarshaller[A](implicit w1: JsonWriter[A], w2: JsonWriter[List[String]]): ToResponseMarshaller[Disjunction[NonEmptyList[String], A]] =
+  implicit def errorDisjunctionMarshaller[A](implicit w1: JsonWriter[A], w2: JsonWriter[List[String]]): ToResponseMarshaller[DisjunctionNel[String, A]] =
     Marshaller.withFixedContentType(MediaTypes.`application/json`) {
       case -\/(errors) => HttpResponse(
         status = StatusCodes.BadRequest,
@@ -48,7 +49,7 @@ trait DisjunctionMarshaller {
       case \/-(success) => HttpResponse(entity = HttpEntity(ContentType(MediaTypes.`application/json`), w1.write(success).compactPrint))
     }
 
-  implicit def errorMessageDisjunctionMarshaller[A <: ErrorMessage, B](implicit w1: JsonWriter[B], w2: JsonWriter[List[String]]): ToResponseMarshaller[Disjunction[NonEmptyList[A], B]] = {
+  implicit def errorMessageDisjunctionMarshaller[A <: ErrorMessage, B](implicit w1: JsonWriter[B], w2: JsonWriter[List[String]]): ToResponseMarshaller[DisjunctionNel[A, B]] = {
     def createResponseWithStatusCode(code: StatusCode, errors: List[ErrorMessage]) = HttpResponse(
       status = code,
       entity = HttpEntity(ContentType(MediaTypes.`application/json`), w2.write(errors.map(_.description)).compactPrint)
@@ -57,6 +58,36 @@ trait DisjunctionMarshaller {
       case -\/(errors) if errors.toList.exists(_.isInstanceOf[FatalError]) => createResponseWithStatusCode(StatusCodes.InternalServerError, errors.toList)
       case -\/(errors)                                                     => createResponseWithStatusCode(StatusCodes.BadRequest, errors.toList)
       case \/-(success)                                                    => HttpResponse(entity = HttpEntity(ContentType(MediaTypes.`application/json`), w1.write(success).compactPrint))
+    }
+  }
+}
+
+trait ValidationMarshaller {
+  implicit def validationMarshaller[A1, A2, B](implicit m1: Marshaller[A1, B], m2: Marshaller[A2, B]): Marshaller[Validation[A1, A2], B] = Marshaller { implicit ec =>
+    {
+      case Failure(a1) => m1(a1)
+      case Success(a2) => m2(a2)
+    }
+  }
+
+  implicit def errorValidationMarshaller[A](implicit w1: JsonWriter[A], w2: JsonWriter[List[String]]): ToResponseMarshaller[ValidationNel[String, A]] =
+    Marshaller.withFixedContentType(MediaTypes.`application/json`) {
+      case Failure(errors) => HttpResponse(
+        status = StatusCodes.BadRequest,
+        entity = HttpEntity(ContentType(MediaTypes.`application/json`), w2.write(errors.toList).compactPrint)
+      )
+      case Success(success) => HttpResponse(entity = HttpEntity(ContentType(MediaTypes.`application/json`), w1.write(success).compactPrint))
+    }
+
+  implicit def errorMessageValidationMarshaller[A <: ErrorMessage, B](implicit w1: JsonWriter[B], w2: JsonWriter[List[String]]): ToResponseMarshaller[ValidationNel[A, B]] = {
+    def createResponseWithStatusCode(code: StatusCode, errors: List[ErrorMessage]) = HttpResponse(
+      status = code,
+      entity = HttpEntity(ContentType(MediaTypes.`application/json`), w2.write(errors.map(_.description)).compactPrint)
+    )
+    Marshaller.withFixedContentType(MediaTypes.`application/json`) {
+      case Failure(errors) if errors.toList.exists(_.isInstanceOf[FatalError]) => createResponseWithStatusCode(StatusCodes.InternalServerError, errors.toList)
+      case Failure(errors)                                                     => createResponseWithStatusCode(StatusCodes.BadRequest, errors.toList)
+      case Success(success)                                                    => HttpResponse(entity = HttpEntity(ContentType(MediaTypes.`application/json`), w1.write(success).compactPrint))
     }
   }
 }
