@@ -19,28 +19,12 @@ Contributions via GitHub pull requests are gladly accepted from their original a
 
 This code is open source software licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
 
-## Dependencies ##
-To use akka-http we need the following dependencies:
+# akka http documentation
+Akka http now has its own release scheme and is not tied to that of akka anymore. 
+As such, you should update your build file accordingly.  
 
-* `reactive-streams`:
-  * Provides the new abstraction for async and non-blocking pipeline processing,
-  * It has automatic support for back-pressure,
-  * Standardized API it's called: [reactive-streams.org](http://www.reactive-streams.org) and as of May 2015 is v1.0,
-* `akka-stream-experimental`:   
-  * Provided a standard API and DSL for creating composable stream transformations based upon the [reactive-streams.org](http://www.reactive-streams.org) standard.
-* `akka-http-core-experimental`:
-  * Sits on top of `akka-io`,
-  * Performs TCP <-> HTTP translation,
-  * Cleanly separated layer of stream transformations provided by Akka Extension,
-  * Implements HTTP 'essentials', no higher-level features (like file serving)
-* `akka-http-scala-experimental`:
-  * Provides higher-level server- and client-side APIs
-  * 'Unmarshalling' custom types from HttpEntities,
-  * 'Marshalling' custom types to HttpEntities
-  * (De)compression (GZip / Deflate),
-  * Routing DSL
-* `akka-http-spray-json-experimental:`:
-  * Provides spray-json support
+- [Akka-HTTP documentation](http://doc.akka.io/docs/akka-http/current/scala.html) 
+- [Akka-HTTP migration guide](http://doc.akka.io/docs/akka-http/current/java/http/migration-guide/migration-guide-2.4.x-3.0.x.html)
 
 # Source Streaming
 As of [Akka v2.4.9-RC1](http://doc.akka.io/docs/akka/2.4/scala/http/routing-dsl/source-streaming-support.html),
