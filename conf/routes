@@ -1,0 +1,1 @@
+GET        /helloworld        com.github.dnvriend.component.helloworld.controller.HelloWorldController.getHelloWorld
