@@ -1,1 +1,6 @@
-GET        /helloworld        com.github.dnvriend.component.helloworld.controller.HelloWorldController.getHelloWorld
+GET        /helloworld               com.github.dnvriend.component.helloworld.controller.HelloWorldController.getHelloWorld
+GET        /helloworld/:id           com.github.dnvriend.component.helloworld.controller.HelloWorldController.getHelloWorldOpt(id: Long)
+GET        /helloworld/mb/:id        com.github.dnvriend.component.helloworld.controller.HelloWorldController.getHelloWorldMB(id: Long)
+GET        /helloworld/d/:id         com.github.dnvriend.component.helloworld.controller.HelloWorldController.getHelloWorldD(id: Long)
+GET        /helloworld/v/:id         com.github.dnvriend.component.helloworld.controller.HelloWorldController.getHelloWorldV(id: Long)
+GET        /helloworld/vn/:id        com.github.dnvriend.component.helloworld.controller.HelloWorldController.getHelloWorldVN(id: Long)

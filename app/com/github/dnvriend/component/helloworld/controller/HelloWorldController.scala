@@ -16,18 +16,27 @@
 
 package com.github.dnvriend.component.helloworld.controller
 
-import com.github.dnvriend.component.helloworld.controller.dto.HelloWorldDto
 import com.github.dnvriend.component.helloworld.repository.HelloWorldRepository
-import com.github.dnvriend.component.helloworld.repository.entity.HelloWorld
 import com.google.inject.Inject
-import play.api.libs.json.Json
 import play.api.mvc._
+import scalaz._
+import Scalaz._
 
+// Why does  this work; the result type of getByIdD is a Disjunction[String, HelloWorld]..
+//
+// This is because of the implicit conversion from HelloWorld to a Result type
+//
+// Action assumes either a 'play.api.mvc.Result' or a function, lets call that function
+// 'f' that converts Request => Result. Here we transform the type Disjunction[String, HelloWorld]
+// to a 'play.api.mvc.Result'.
+//
+// You should look at the HelloWorld entity to read more.
+//
 class HelloWorldController @Inject() (repo: HelloWorldRepository) extends Controller {
-  def getHelloWorld = Action {
-    //TODO: read the shapeless book and derive type classes to do this stuff...
-    val genericHelloWorld = HelloWorld.generic.to(repo.getHelloWorld)
-    val dto = HelloWorldDto.generic.from(genericHelloWorld)
-    Ok(Json.toJson(dto))
-  }
+  def getHelloWorld = Action(repo.getHelloWorld)
+  def getHelloWorldOpt(id: Long) = Action(repo.getById(id))
+  def getHelloWorldMB(id: Long) = Action(repo.getById(id).toMaybe)
+  def getHelloWorldD(id: Long) = Action(repo.getByIdD(id))
+  def getHelloWorldV(id: Long) = Action(repo.getByIdD(id).validation)
+  def getHelloWorldVN(id: Long) = Action(repo.getByIdD(id).validationNel)
 }

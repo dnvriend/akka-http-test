@@ -16,12 +16,10 @@
 
 package com.github.dnvriend.component.helloworld.controller.dto
 
-import play.api.libs.json.Json
-import shapeless.Generic
+import play.api.libs.json._
 
 object HelloWorldDto {
-  implicit val generic = Generic[HelloWorldDto]
-  implicit val format = Json.format[HelloWorldDto]
+  implicit val format: Format[HelloWorldDto] = Json.format[HelloWorldDto]
 }
 
 final case class HelloWorldDto(msg: String)

@@ -17,8 +17,11 @@
 package com.github.dnvriend.component.helloworld.repository
 
 import com.github.dnvriend.component.helloworld.repository.entity.HelloWorld
+import scalaz._
+import Scalaz._
 
 class HelloWorldRepository {
-  def getHelloWorld: HelloWorld =
-    HelloWorld("Hello World!")
+  def getHelloWorld: HelloWorld = HelloWorld("Hello World!")
+  def getById(id: Long): Option[HelloWorld] = Option(getHelloWorld)
+  def getByIdD(id: Long): Disjunction[String, HelloWorld] = getById(id).toRightDisjunction(s"Could not find HelloWorld for id: $id")
 }
