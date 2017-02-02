@@ -16,33 +16,26 @@
 
 package com.github.dnvriend
 
+import javax.inject.Inject
+
 import akka.actor.ActorSystem
-import akka.event.{ Logging, LoggingAdapter }
 import akka.stream.Materializer
 import com.github.dnvriend.component.repository.PersonRepository
 import com.github.dnvriend.component.simpleserver.SimpleServer
-import com.google.inject.{ AbstractModule, Provides, Singleton }
+import com.google.inject.{ AbstractModule, Provider }
 import play.api.libs.concurrent.AkkaGuiceSupport
 
 import scala.concurrent.ExecutionContext
 
 class Module extends AbstractModule with AkkaGuiceSupport {
   override def configure(): Unit = {
+    bind(classOf[SimpleServer])
+      .toProvider(classOf[SimpleServerProvider])
+      .asEagerSingleton()
   }
+}
 
-  @Provides
-  @Singleton
-  def personRepository(implicit ec: ExecutionContext): PersonRepository =
-    new PersonRepository()
-
-  @Provides
-  @Singleton
-  def simpleServer(personRepository: PersonRepository)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, log: LoggingAdapter): SimpleServer =
+class SimpleServerProvider @Inject() (personRepository: PersonRepository)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext) extends Provider[SimpleServer] {
+  override def get(): SimpleServer =
     new SimpleServer(personRepository)
-
-  @Provides
-  @Singleton
-  def loggingAdapter(system: ActorSystem): LoggingAdapter = {
-    Logging(system, this.getClass)
-  }
 }

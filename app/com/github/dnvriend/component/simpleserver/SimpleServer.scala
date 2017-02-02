@@ -16,16 +16,20 @@
 
 package com.github.dnvriend.component.simpleserver
 
+import javax.inject.Inject
+
 import akka.actor.ActorSystem
 import akka.event.{ Logging, LoggingAdapter }
 import akka.http.scaladsl._
 import akka.stream.{ ActorMaterializer, Materializer }
 import com.github.dnvriend.component.repository.PersonRepository
 import com.github.dnvriend.component.simpleserver.route._
+import com.google.inject.Singleton
 
 import scala.concurrent.ExecutionContext
 
-class SimpleServer(personDao: PersonRepository)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext, logger: LoggingAdapter) {
+@Singleton
+class SimpleServer @Inject() (personDao: PersonRepository)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext) {
   Http().bindAndHandle(SimpleServerRestRoutes.routes(personDao), "0.0.0.0", 8080)
 }
 

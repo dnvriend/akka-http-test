@@ -16,13 +16,16 @@
 
 package com.github.dnvriend.component.repository
 
+import javax.inject.{ Inject, Singleton }
+
 import akka.NotUsed
 import akka.stream.scaladsl.Source
 import com.github.dnvriend.component.simpleserver.dto.http.Person
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class PersonRepository(implicit ec: ExecutionContext) {
+@Singleton
+class PersonRepository @Inject() (implicit ec: ExecutionContext) {
   def people(numberOfPeople: Int): Source[Person, NotUsed] =
     Source.repeat(Person("foo", 1, false)).zipWith(Source.fromIterator(() => Iterator from 0)) {
       case (p, i) => p.copy(

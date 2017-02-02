@@ -16,7 +16,6 @@
 
 package com.github.dnvriend.component.simpleserver.route
 
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{ Directives, Route }
 import akka.stream.Materializer
@@ -28,7 +27,7 @@ import com.github.dnvriend.util.TimeUtil
 import scala.concurrent.ExecutionContext
 
 object SimpleServerRestRoutes extends Directives with Marshallers {
-  def routes(dao: PersonRepository)(implicit log: LoggingAdapter, mat: Materializer, ec: ExecutionContext): Route =
+  def routes(dao: PersonRepository)(implicit mat: Materializer, ec: ExecutionContext): Route =
     logRequestResult("akka-http-test") {
       pathPrefix("person") {
         path("sync") {

@@ -38,7 +38,7 @@ object JsonStreamingRoute extends Directives with SprayJsonSupport with Marshall
     .withFramingRenderer(Flow[ByteString].intersperse(start, sep, end))
     .withParallelMarshalling(parallelism = 8, unordered = true)
 
-  def route(dao: PersonRepository)(implicit log: LoggingAdapter, mat: Materializer, ec: ExecutionContext): Route =
+  def route(dao: PersonRepository)(implicit mat: Materializer, ec: ExecutionContext): Route =
     path("stream" / IntNumber) { numberOfPersons =>
       (get & pathEnd) {
         complete(dao.people(numberOfPersons))
