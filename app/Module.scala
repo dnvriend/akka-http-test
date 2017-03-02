@@ -22,6 +22,7 @@ import akka.stream.Materializer
 import com.github.dnvriend.component.repository.PersonRepository
 import com.github.dnvriend.component.simpleserver.SimpleServer
 import com.google.inject.{ AbstractModule, Provider, Provides }
+import play.api.Configuration
 import play.api.libs.concurrent.AkkaGuiceSupport
 
 import scala.concurrent.ExecutionContext
@@ -44,7 +45,7 @@ class Module extends AbstractModule with AkkaGuiceSupport {
 }
 
 // alternative way to provide services
-class SimpleServerProvider @Inject() (personRepository: PersonRepository, cb: CircuitBreaker)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext) extends Provider[SimpleServer] {
+class SimpleServerProvider @Inject() (personRepository: PersonRepository, cb: CircuitBreaker, config: Configuration)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext) extends Provider[SimpleServer] {
   override def get(): SimpleServer =
-    new SimpleServer(personRepository, cb)
+    new SimpleServer(personRepository, cb, config.getString("http.interface").getOrElse("0.0.0.0"), config.getInt("http.port").getOrElse(8080))
 }

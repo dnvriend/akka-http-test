@@ -26,13 +26,14 @@ import akka.stream.{ ActorMaterializer, Materializer }
 import com.github.dnvriend.component.repository.PersonRepository
 import com.github.dnvriend.component.simpleserver.route._
 import com.google.inject.Singleton
+import play.api.Configuration
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 @Singleton
-class SimpleServer @Inject() (personDao: PersonRepository, cb: CircuitBreaker)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext) {
-  Http().bindAndHandle(SimpleServerRestRoutes.routes(personDao, cb), "0.0.0.0", 8080)
+class SimpleServer @Inject() (personDao: PersonRepository, cb: CircuitBreaker, interface: String, port: Int)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext) {
+  Http().bindAndHandle(SimpleServerRestRoutes.routes(personDao, cb), interface, port)
 }
 
 object SimpleServerLauncher extends App {
@@ -44,10 +45,11 @@ object SimpleServerLauncher extends App {
   val callTimeout: FiniteDuration = 1.seconds
   val resetTimeout: FiniteDuration = 10.seconds
   val cb = new CircuitBreaker(system.scheduler, maxFailures, callTimeout, resetTimeout)
+  val config: play.api.Configuration = Configuration(system.settings.config)
 
   sys.addShutdownHook {
     system.terminate()
   }
 
-  new SimpleServer(new PersonRepository, cb)
+  new SimpleServer(new PersonRepository, cb, config.getString("http.interface").getOrElse("0.0.0.0"), config.getInt("http.port").getOrElse(8080))
 }
