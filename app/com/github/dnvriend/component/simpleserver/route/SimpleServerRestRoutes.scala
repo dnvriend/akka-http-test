@@ -18,6 +18,7 @@ package com.github.dnvriend.component.simpleserver.route
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{ Directives, Route }
+import akka.pattern.CircuitBreaker
 import akka.stream.Materializer
 import com.github.dnvriend.component.repository.PersonRepository
 import com.github.dnvriend.component.simpleserver.dto.http.{ Person, Ping }
@@ -27,7 +28,7 @@ import com.github.dnvriend.util.TimeUtil
 import scala.concurrent.ExecutionContext
 
 object SimpleServerRestRoutes extends Directives with Marshallers {
-  def routes(dao: PersonRepository)(implicit mat: Materializer, ec: ExecutionContext): Route =
+  def routes(dao: PersonRepository, cb: CircuitBreaker)(implicit mat: Materializer, ec: ExecutionContext): Route =
     logRequestResult("akka-http-test") {
       pathPrefix("person") {
         path("sync") {
@@ -37,12 +38,17 @@ object SimpleServerRestRoutes extends Directives with Marshallers {
         } ~
           path("async") {
             get {
-              complete(dao.personAsync)
+              complete(cb.withCircuitBreaker(dao.personAsync))
+            }
+          } ~
+          path("failed") {
+            get {
+              complete(cb.withCircuitBreaker(dao.personAsyncFailed))
             }
           } ~
           pathEnd {
             get {
-              complete(dao.personSync)
+              complete(cb.withSyncCircuitBreaker(dao.personSync))
             }
           } ~
           (post & entity(as[Person])) { person =>
@@ -52,7 +58,7 @@ object SimpleServerRestRoutes extends Directives with Marshallers {
         pathPrefix("strict" / IntNumber) { numberOfPersons =>
           pathEnd {
             get {
-              complete(dao.listOfPersons(numberOfPersons))
+              complete(cb.withSyncCircuitBreaker(dao.listOfPersons(numberOfPersons)))
             }
           }
         } ~ JsonStreamingRoute.route(dao) ~ CsvStreamingRoute.route(dao)

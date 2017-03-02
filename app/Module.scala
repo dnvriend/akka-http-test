@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.github.dnvriend
-
 import javax.inject.Inject
 
 import akka.actor.ActorSystem
+import akka.pattern.CircuitBreaker
 import akka.stream.Materializer
 import com.github.dnvriend.component.repository.PersonRepository
 import com.github.dnvriend.component.simpleserver.SimpleServer
-import com.google.inject.{ AbstractModule, Provider }
+import com.google.inject.{ AbstractModule, Provider, Provides }
 import play.api.libs.concurrent.AkkaGuiceSupport
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
 
 class Module extends AbstractModule with AkkaGuiceSupport {
   override def configure(): Unit = {
@@ -33,9 +33,18 @@ class Module extends AbstractModule with AkkaGuiceSupport {
       .toProvider(classOf[SimpleServerProvider])
       .asEagerSingleton()
   }
+
+  @Provides
+  def circuitBreakerProvider(system: ActorSystem)(implicit ec: ExecutionContext): CircuitBreaker = {
+    val maxFailures: Int = 3
+    val callTimeout: FiniteDuration = 1.seconds
+    val resetTimeout: FiniteDuration = 10.seconds
+    new CircuitBreaker(system.scheduler, maxFailures, callTimeout, resetTimeout)
+  }
 }
 
-class SimpleServerProvider @Inject() (personRepository: PersonRepository)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext) extends Provider[SimpleServer] {
+// alternative way to provide services
+class SimpleServerProvider @Inject() (personRepository: PersonRepository, cb: CircuitBreaker)(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext) extends Provider[SimpleServer] {
   override def get(): SimpleServer =
-    new SimpleServer(personRepository)
+    new SimpleServer(personRepository, cb)
 }

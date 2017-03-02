@@ -45,5 +45,7 @@ class PersonRepository @Inject() (implicit ec: ExecutionContext) {
 
   def personAsync: Future[Person] = Future.successful(personSync)
 
+  def personAsyncFailed: Future[Person] = Future.failed(new RuntimeException("This should fail")).map(_ => personSync)
+
   def personSync: Person = Person("John Doe", 25, false)
 }
