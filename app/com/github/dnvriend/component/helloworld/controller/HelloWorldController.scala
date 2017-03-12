@@ -33,7 +33,11 @@ import Scalaz._
 // You should look at the HelloWorld entity to read more.
 //
 class HelloWorldController @Inject() (repo: HelloWorldRepository) extends Controller {
-  def getHelloWorld = Action(repo.getHelloWorld)
+  def getHelloWorld = Action { request =>
+    val header: String = request.headers.get("X-ExampleFilter").getOrElse("No header")
+    val msg = repo.getHelloWorld
+    msg.copy(msg = s"${msg.msg} - $header")
+  }
   def getHelloWorldOpt(id: Long) = Action(repo.getById(id))
   def getHelloWorldMB(id: Long) = Action(repo.getById(id).toMaybe)
   def getHelloWorldD(id: Long) = Action(repo.getByIdD(id))
