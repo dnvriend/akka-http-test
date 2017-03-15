@@ -25,7 +25,7 @@ libraryDependencies += "com.h2database" % "h2" % "1.4.193"
 libraryDependencies += "com.typesafe.akka" %% "akka-http-testkit" % httpVersion % Test
 libraryDependencies += "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test
 libraryDependencies += "org.typelevel" %% "scalaz-scalatest" % "1.1.2" % Test
-libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.0-M2" % Test
+libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.0-M1" % Test
 
 licenses += ("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php"))
 
