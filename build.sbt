@@ -7,25 +7,27 @@ scalaVersion := "2.11.8"
 resolvers += Resolver.bintrayRepo("hseeberger", "maven")
 
 val akkaVersion = "2.4.17"
-val httpVersion = "10.0.4"
-val scalazVersion = "7.2.9"
+// akka v2.5.0 doesn't work with Play
+//val akkaVersion = "2.5.0"
+val httpVersion = "10.0.5"
+val scalazVersion = "7.2.10"
 
 libraryDependencies += "com.typesafe.akka" %% "akka-actor" % akkaVersion
 libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
 libraryDependencies += "com.typesafe.akka" %% "akka-http-core" % httpVersion
 libraryDependencies += "com.typesafe.akka" %% "akka-http-spray-json" % httpVersion
 libraryDependencies += "com.typesafe.akka" %% "akka-http-xml" % httpVersion
-libraryDependencies += "de.heikoseeberger" %% "akka-http-play-json" % "1.13.0"
+libraryDependencies += "de.heikoseeberger" %% "akka-http-play-json" % "1.15.0"
 libraryDependencies += "com.github.nscala-time" %% "nscala-time" % "2.16.0"
 libraryDependencies += "org.scalaz" %% "scalaz-core" % scalazVersion
 libraryDependencies += "org.typelevel" %% "scalaz-outlaws" % "0.2"
 libraryDependencies += "com.hunorkovacs" %% "koauth" % "1.1.0" exclude("com.typesafe.akka", "akka-actor_2.11") exclude("org.specs2", "specs2_2.11")
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.1"
-libraryDependencies += "com.h2database" % "h2" % "1.4.193"
+libraryDependencies += "com.h2database" % "h2" % "1.4.194"
 libraryDependencies += "com.typesafe.akka" %% "akka-http-testkit" % httpVersion % Test
 libraryDependencies += "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test
 libraryDependencies += "org.typelevel" %% "scalaz-scalatest" % "1.1.2" % Test
-libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.0-M1" % Test
+libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.0" % Test
 
 licenses += ("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php"))
 
